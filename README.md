@@ -39,7 +39,8 @@ Operational runtime, wallet material, local state, and private automation stay i
 
 ## Links
 
-- AIBTC Projects entry: pending registration
+- AIBTC Projects entry: <https://aibtc-projects.pages.dev/?id=r_499b082c>
+- AIBTC agent profile: <https://aibtc.com/agents/bc1ql00qwp4mnw6q6ux7hfcjhkj5wdwj4445pc6u9h>
 - Agent X account: <https://x.com/zks_lucky>
 
 ## Security Model
