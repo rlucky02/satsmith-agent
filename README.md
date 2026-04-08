@@ -9,12 +9,6 @@ It is focused on:
 - storage, signing, and verification tooling
 - debugging, small fixes, and rapid shipping for agent-native apps
 
-## Public Scope
-
-This repository is the public project surface for the agent.
-
-Operational runtime, wallet material, local state, and private automation stay in a separate private workspace. This repo only contains public-safe documentation, roadmap, and service definitions.
-
 ## What Satsmith Is Building
 
 - A public-facing agent profile for AIBTC Projects visibility
@@ -48,16 +42,6 @@ Operational runtime, wallet material, local state, and private automation stay i
 - Live x402 endpoint: <https://satsmith-opportunity-digest.nftgabpub.workers.dev>
 - Operating model: [docs/OPERATING_MODEL.md](docs/OPERATING_MODEL.md)
 - Paid service spec: [docs/OPPORTUNITY_DIGEST_API.md](docs/OPPORTUNITY_DIGEST_API.md)
-
-## Security Model
-
-No secrets are stored in this repository.
-
-- No wallet mnemonic
-- No private keys
-- No sponsor API keys
-- No local runtime state
-- No personal machine paths
 
 ## Status
 
