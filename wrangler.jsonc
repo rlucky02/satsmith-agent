@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "satsmith-opportunity-digest",
   "main": "src/index.ts",
-  "compatibility_date": "2026-04-09",
+  "compatibility_date": "2026-04-08",
   "compatibility_flags": ["nodejs_compat_v2"],
   "workers_dev": true,
   "vars": {
