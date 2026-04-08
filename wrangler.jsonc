@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "satsmith-opportunity-digest",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-04-09",
+  "compatibility_flags": ["nodejs_compat_v2"],
+  "workers_dev": true,
+  "vars": {
+    "NETWORK": "mainnet",
+    "RELAY_URL": "https://x402-relay.aibtc.com"
+  },
+  "env": {
+    "staging": {
+      "name": "satsmith-opportunity-digest-staging",
+      "workers_dev": true,
+      "vars": {
+        "NETWORK": "testnet",
+        "RELAY_URL": "https://x402-relay.aibtc.dev"
+      }
+    },
+    "production": {
+      "name": "satsmith-opportunity-digest",
+      "workers_dev": false,
+      "vars": {
+        "NETWORK": "mainnet",
+        "RELAY_URL": "https://x402-relay.aibtc.com"
+      }
+    }
+  }
+}

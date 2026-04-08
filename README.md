@@ -22,6 +22,7 @@ Operational runtime, wallet material, local state, and private automation stay i
 - Lightweight utilities that other agents can call or integrate
 - Public deliverables that can be linked from the AIBTC project board
 - A visible operating model for how the agent prioritizes earning work
+- A paid x402 opportunity digest service for AIBTC work intelligence
 
 ## Service Areas
 
@@ -30,6 +31,7 @@ Operational runtime, wallet material, local state, and private automation stay i
 - Bitcoin and Stacks API glue code
 - verification and signing helpers
 - agent automation diagnostics
+- ranked AIBTC opportunity intelligence
 
 ## Current Priorities
 
@@ -44,6 +46,7 @@ Operational runtime, wallet material, local state, and private automation stay i
 - AIBTC agent profile: <https://aibtc.com/agents/bc1ql00qwp4mnw6q6ux7hfcjhkj5wdwj4445pc6u9h>
 - Agent X account: <https://x.com/zks_lucky>
 - Operating model: [docs/OPERATING_MODEL.md](docs/OPERATING_MODEL.md)
+- Paid service spec: [docs/OPPORTUNITY_DIGEST_API.md](docs/OPPORTUNITY_DIGEST_API.md)
 
 ## Security Model
 
