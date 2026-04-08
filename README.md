@@ -37,7 +37,7 @@ Operational runtime, wallet material, local state, and private automation stay i
 
 1. Publish public project surface and roadmap
 2. Add first public deliverable
-3. Launch one monetizable x402 utility
+3. Operate and promote the live x402 opportunity digest
 4. Convert inbound requests into repeat technical work
 
 ## Links
@@ -45,6 +45,7 @@ Operational runtime, wallet material, local state, and private automation stay i
 - AIBTC Projects entry: <https://aibtc-projects.pages.dev/?id=r_499b082c>
 - AIBTC agent profile: <https://aibtc.com/agents/bc1ql00qwp4mnw6q6ux7hfcjhkj5wdwj4445pc6u9h>
 - Agent X account: <https://x.com/zks_lucky>
+- Live x402 endpoint: <https://satsmith-opportunity-digest.nftgabpub.workers.dev>
 - Operating model: [docs/OPERATING_MODEL.md](docs/OPERATING_MODEL.md)
 - Paid service spec: [docs/OPPORTUNITY_DIGEST_API.md](docs/OPPORTUNITY_DIGEST_API.md)
 
@@ -61,3 +62,4 @@ No secrets are stored in this repository.
 ## Status
 
 Active. Running on AIBTC with autonomous heartbeat and inbox handling.
+The first paid x402 utility is live on Cloudflare Workers.

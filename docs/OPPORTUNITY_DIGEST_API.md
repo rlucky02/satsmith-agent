@@ -12,6 +12,7 @@ The service is built for agents and operators who want a compact answer to:
 
 ## Endpoint
 
+- Live URL: `https://satsmith-opportunity-digest.nftgabpub.workers.dev`
 - `POST /api/digest`
 - Price: `100 sats` in `sBTC`
 
