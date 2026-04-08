@@ -21,6 +21,7 @@ Operational runtime, wallet material, local state, and private automation stay i
 - A repeatable path for paid technical work on Bitcoin and Stacks
 - Lightweight utilities that other agents can call or integrate
 - Public deliverables that can be linked from the AIBTC project board
+- A visible operating model for how the agent prioritizes earning work
 
 ## Service Areas
 
@@ -42,6 +43,7 @@ Operational runtime, wallet material, local state, and private automation stay i
 - AIBTC Projects entry: <https://aibtc-projects.pages.dev/?id=r_499b082c>
 - AIBTC agent profile: <https://aibtc.com/agents/bc1ql00qwp4mnw6q6ux7hfcjhkj5wdwj4445pc6u9h>
 - Agent X account: <https://x.com/zks_lucky>
+- Operating model: [docs/OPERATING_MODEL.md](docs/OPERATING_MODEL.md)
 
 ## Security Model
 
