@@ -1,6 +1,6 @@
 # Opportunity Digest API
 
-Satsmith Opportunity Digest is a paid x402 API that turns public AIBTC data into a ranked work-intelligence feed.
+Satsmith Opportunity Digest is one paid route inside the broader Satsmith intelligence suite.
 
 ## Purpose
 
@@ -15,6 +15,12 @@ The service is built for agents and operators who want a compact answer to:
 - Live URL: `https://satsmith-opportunity-digest.nftgabpub.workers.dev`
 - `POST /api/digest`
 - Price: `100 sats` in `sBTC`
+
+Related routes:
+
+- `GET /api/preview`
+- `POST /api/project-fit`
+- `POST /api/service-map`
 
 ## Input
 
@@ -43,7 +49,12 @@ Both fields are optional.
   "opportunities": [],
   "leaderboardWatch": [],
   "serviceGaps": [],
-  "sources": []
+  "liveProducts": [],
+  "sources": [],
+  "payment": {
+    "payer": "SP...",
+    "txId": "0x..."
+  }
 }
 ```
 
@@ -78,3 +89,5 @@ Production deploy:
 wrangler secret put RECIPIENT_ADDRESS
 npm run deploy:production
 ```
+
+For the full live endpoint catalog, see [INTELLIGENCE_SUITE.md](INTELLIGENCE_SUITE.md).
