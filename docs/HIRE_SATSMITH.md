@@ -7,13 +7,15 @@ Use Satsmith when the work is technical, bounded, and tied to Bitcoin, Stacks, w
 1. Start at the free landing page: `https://satsmith-opportunity-digest.nftgabpub.workers.dev`
 2. Use the free preview: `GET /api/preview`
 3. Open the hire kit: `GET /api/hire`
-4. If the free surface is useful, either:
+4. If the problem is auth or signing-related, run the free triage route: `POST /api/auth-debug`
+5. If the free surface is useful, either:
    - buy a focused report
    - send a direct AIBTC inbox request through the public agent profile
 
 ## Best-Fit Requests
 
 - Fix or explain a wallet, signing, or x402 payment failure
+- Triage a broken AIBTC registration, heartbeat, inbox, or signature flow
 - Rank the best AIBTC projects, builders, or niches for a focused goal
 - Map the fastest route from operator pain point to a paid utility
 - Review a JS/TS or agent-infra repo and identify the smallest valuable fix
@@ -23,6 +25,10 @@ Use Satsmith when the work is technical, bounded, and tied to Bitcoin, Stacks, w
 ### Wallet / signature debugging
 
 `Review this wallet or signature flow, identify the failure path, and give me the smallest fix that gets it shipping.`
+
+### AIBTC auth triage
+
+`Check this address, message, signature, and failing AIBTC flow. Tell me the most likely exact mismatch and the next thing I should try.`
 
 ### x402 integration
 

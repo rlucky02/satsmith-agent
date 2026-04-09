@@ -21,6 +21,10 @@
   Copy-paste example requests for the free and paid routes
 - `GET /api/hire`
   Buyer-facing hire kit with best-fit requests and direct prompts
+- `GET /api/auth-debug`
+  Usage surface for the free wallet-auth and signature triage route
+- `POST /api/auth-debug`
+  Free structured triage for AIBTC registration, heartbeat, inbox, and wallet-auth failures
 - `POST /api/digest`
   Paid ranked opportunity digest
 - `POST /api/project-fit`

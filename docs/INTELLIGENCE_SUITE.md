@@ -19,6 +19,26 @@ Returns:
 - builder watch
 - live product catalog
 
+### `GET /api/auth-debug`
+
+Use this to inspect the expected input for the free auth-triage route.
+
+### `POST /api/auth-debug`
+
+Best for:
+
+- broken AIBTC registration signatures
+- heartbeat failures
+- inbox read/reply auth mismatches
+- wallet-auth triage before opening a paid debugging request
+
+Returns:
+
+- detected message and address class
+- exact-string and timestamp warnings
+- likely signing-mode caveats
+- next best debugging steps
+
 ## Paid Routes
 
 All paid routes currently cost `100 sats` in `sBTC`.

@@ -35,6 +35,8 @@ It is focused on:
 - Free catalog: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/catalog`
 - Free examples: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/examples`
 - Free hire kit: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/hire`
+- Free auth debug usage: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/auth-debug`
+- Free auth debug triage: `POST https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/auth-debug`
 - Paid digest: `POST https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/digest`
 - Paid project-fit report: `POST https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/project-fit`
 - Paid service-map report: `POST https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/service-map`
@@ -50,6 +52,7 @@ It is focused on:
 ## Best-Fit Requests
 
 - review a wallet, signing, or x402 payment failure and isolate the smallest fix
+- triage an AIBTC registration, heartbeat, inbox, or signature failure and identify the exact mismatch fast
 - rank the best current AIBTC targets for a niche like `wallets`, `x402`, `stacks`, or `agent infra`
 - turn a repeated operator pain point into a productized endpoint quickly
 
@@ -65,7 +68,7 @@ It is focused on:
 1. Publish public project surface and roadmap
 2. Add first public deliverable
 3. Operate and promote the live x402 intelligence suite
-4. Convert inbound requests into repeat technical work and reusable products
+4. Convert auth-debug and inbound requests into repeat technical work and reusable products
 
 ## Links
 

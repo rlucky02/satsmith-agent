@@ -70,8 +70,17 @@ type RankedProject = {
   firstMove: string;
 };
 
+type AuthDebugInput = {
+  address?: string;
+  chain?: string;
+  message?: string;
+  signature?: string;
+  flow?: string;
+  context?: string;
+};
+
 const SERVICE_NAME = "satsmith-intelligence-suite";
-const SERVICE_VERSION = "0.3.0";
+const SERVICE_VERSION = "0.4.0";
 const SERVICE_PRICE_SATS = "100";
 const FREE_PREVIEW_LIMIT = 3;
 const ACTIVITY_URL = "https://aibtc.com/api/activity";
@@ -79,6 +88,28 @@ const LEADERBOARD_URL = "https://aibtc.com/api/leaderboard?limit=10";
 const PROJECTS_URL = "https://aibtc-projects.pages.dev/api/items";
 const BOUNTY_STATS_URL = "https://bounty.drx4.xyz/api/stats";
 const RELEVANCE_PATTERN = /(bitcoin|stacks|x402|agent|api|tool|skill|audit|review|dashboard|infra|oracle|sign|verify|payment|relay|wallet)/i;
+const AIBTC_MESSAGE_PATTERNS = [
+  {
+    kind: "registration",
+    exact: "Bitcoin will be the currency of AIs",
+    hint: "Registration signatures must match the exact static phrase.",
+  },
+  {
+    kind: "heartbeat",
+    prefix: "AIBTC Check-In | ",
+    hint: "Heartbeat messages need an ISO 8601 timestamp close to server time.",
+  },
+  {
+    kind: "inbox-read",
+    prefix: "Inbox Read | ",
+    hint: "Inbox read signatures require the exact message id after the separator.",
+  },
+  {
+    kind: "inbox-reply",
+    prefix: "Inbox Reply | ",
+    hint: "Inbox reply signatures require exact separators and reply text.",
+  },
+] as const;
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -100,6 +131,269 @@ function toNumber(value: unknown, fallback = 0): number {
 function short(text: string, max = 180): string {
   const clean = String(text ?? "").replace(/\s+/g, " ").trim();
   return clean.length <= max ? clean : `${clean.slice(0, max - 3)}...`;
+}
+
+function inferAddressProfile(address: string) {
+  const value = String(address ?? "").trim();
+  if (!value) {
+    return {
+      kind: "unknown",
+      network: "unknown",
+      notes: ["Address is missing."],
+    };
+  }
+
+  if (/^(SP|SM)/.test(value)) {
+    return {
+      kind: "stacks",
+      network: "mainnet",
+      notes: ["Stacks mainnet address detected."],
+    };
+  }
+
+  if (/^(ST|SN)/.test(value)) {
+    return {
+      kind: "stacks",
+      network: "testnet",
+      notes: ["Stacks testnet address detected."],
+    };
+  }
+
+  if (/^bc1p/i.test(value)) {
+    return {
+      kind: "bitcoin",
+      network: "mainnet",
+      notes: ["Taproot bitcoin address detected. Some wallet flows use BIP-322 and can hide the pubkey until challenged."],
+    };
+  }
+
+  if (/^bc1q/i.test(value)) {
+    return {
+      kind: "bitcoin",
+      network: "mainnet",
+      notes: ["SegWit bitcoin address detected. Message verification often depends on the wallet's signing mode."],
+    };
+  }
+
+  if (/^[13]/.test(value)) {
+    return {
+      kind: "bitcoin",
+      network: "mainnet",
+      notes: ["Legacy bitcoin mainnet address detected."],
+    };
+  }
+
+  if (/^(tb1p|tb1q|m|n|2)/i.test(value)) {
+    return {
+      kind: "bitcoin",
+      network: "testnet",
+      notes: ["Bitcoin testnet address detected."],
+    };
+  }
+
+  return {
+    kind: "unknown",
+    network: "unknown",
+    notes: ["Address format is not recognized as a common BTC or STX format."],
+  };
+}
+
+function detectAibtcMessage(message: string) {
+  const raw = String(message ?? "");
+  for (const pattern of AIBTC_MESSAGE_PATTERNS) {
+    if ("exact" in pattern && raw === pattern.exact) {
+      return {
+        kind: pattern.kind,
+        exactMatch: true,
+        hint: pattern.hint,
+      };
+    }
+    if ("prefix" in pattern && raw.startsWith(pattern.prefix)) {
+      return {
+        kind: pattern.kind,
+        exactMatch: true,
+        hint: pattern.hint,
+      };
+    }
+  }
+
+  const fuzzy = AIBTC_MESSAGE_PATTERNS.find((pattern) => {
+    if ("exact" in pattern) {
+      return raw.trim() === pattern.exact;
+    }
+    return raw.trim().startsWith(pattern.prefix);
+  });
+
+  return {
+    kind: fuzzy?.kind ?? "custom",
+    exactMatch: !fuzzy,
+    hint: fuzzy?.hint ?? "Custom message detected.",
+  };
+}
+
+function buildAuthDebug(body: AuthDebugInput) {
+  const address = String(body.address ?? "").trim();
+  const chain = String(body.chain ?? "").trim().toLowerCase();
+  const message = String(body.message ?? "");
+  const signature = String(body.signature ?? "").trim();
+  const flow = String(body.flow ?? "").trim();
+  const context = String(body.context ?? "").trim();
+  const addressProfile = inferAddressProfile(address);
+  const detectedMessage = detectAibtcMessage(message);
+  const findings: Array<{ severity: "high" | "medium" | "low"; issue: string; detail: string }> = [];
+  const nextActions: string[] = [];
+
+  if (!address) {
+    findings.push({
+      severity: "high",
+      issue: "Missing address",
+      detail: "Provide the signer address so the debug flow can identify BTC vs STX rules.",
+    });
+  }
+
+  if (!signature) {
+    findings.push({
+      severity: "high",
+      issue: "Missing signature",
+      detail: "Without a signature this route can only do format triage, not a real auth debug pass.",
+    });
+  } else if (signature.length < 40) {
+    findings.push({
+      severity: "medium",
+      issue: "Suspiciously short signature",
+      detail: "The supplied signature is shorter than most BTC/STX message signatures and may be truncated or copied incorrectly.",
+    });
+  }
+
+  if (!message.trim()) {
+    findings.push({
+      severity: "high",
+      issue: "Missing message",
+      detail: "AIBTC auth depends on exact message text. Empty or partially copied messages fail verification.",
+    });
+  }
+
+  if (message && message !== message.trim()) {
+    findings.push({
+      severity: "high",
+      issue: "Leading or trailing whitespace",
+      detail: "AIBTC signature checks are exact-string sensitive. Extra spaces or newlines commonly break auth.",
+    });
+  }
+
+  if (chain && addressProfile.kind !== "unknown") {
+    if (chain === "stx" && addressProfile.kind !== "stacks") {
+      findings.push({
+        severity: "high",
+        issue: "Chain/address mismatch",
+        detail: "The request says STX but the address looks like BTC.",
+      });
+    }
+    if (chain === "btc" && addressProfile.kind !== "bitcoin") {
+      findings.push({
+        severity: "high",
+        issue: "Chain/address mismatch",
+        detail: "The request says BTC but the address looks like STX.",
+      });
+    }
+  }
+
+  if (detectedMessage.kind === "registration" && message !== "Bitcoin will be the currency of AIs") {
+    findings.push({
+      severity: "high",
+      issue: "Registration phrase mismatch",
+      detail: "Registration only verifies against the exact phrase `Bitcoin will be the currency of AIs`.",
+    });
+  }
+
+  if (detectedMessage.kind === "heartbeat") {
+    const timestamp = message.split("|")[1]?.trim() ?? "";
+    const parsed = Date.parse(timestamp);
+    if (!timestamp) {
+      findings.push({
+        severity: "high",
+        issue: "Missing heartbeat timestamp",
+        detail: "Heartbeat signatures need `AIBTC Check-In | <ISO timestamp>`.",
+      });
+    } else if (Number.isNaN(parsed)) {
+      findings.push({
+        severity: "high",
+        issue: "Invalid heartbeat timestamp",
+        detail: "Heartbeat timestamps should be valid ISO 8601 values, usually with a trailing `Z`.",
+      });
+    } else {
+      const driftMinutes = Math.abs(Date.now() - parsed) / 60_000;
+      if (driftMinutes > 5) {
+        findings.push({
+          severity: "high",
+          issue: "Heartbeat timestamp drift",
+          detail: `Current heartbeat timestamp is ${driftMinutes.toFixed(1)} minutes away from server time. AIBTC heartbeat windows are tight.`,
+        });
+      }
+    }
+  }
+
+  if (detectedMessage.kind === "inbox-read" && !/^Inbox Read \| [A-Za-z0-9-]+$/.test(message.trim())) {
+    findings.push({
+      severity: "medium",
+      issue: "Inbox read format risk",
+      detail: "Expected `Inbox Read | <messageId>` with exact spacing.",
+    });
+  }
+
+  if (detectedMessage.kind === "inbox-reply" && message.trim().split("|").length < 3) {
+    findings.push({
+      severity: "medium",
+      issue: "Inbox reply format risk",
+      detail: "Expected `Inbox Reply | <messageId> | <reply text>` with both separators preserved.",
+    });
+  }
+
+  if (addressProfile.kind === "bitcoin" && /^bc1[qp]/i.test(address)) {
+    findings.push({
+      severity: "low",
+      issue: "Modern BTC signing caveat",
+      detail: "bc1q/bc1p wallets often use BIP-322 style message signing. If registration complains about missing pubkey, a challenge flow or nostr pubkey may be required.",
+    });
+  }
+
+  nextActions.push("Re-sign the exact message from the same wallet account without editing whitespace.");
+  if (detectedMessage.kind === "heartbeat") {
+    nextActions.push("Generate a fresh ISO 8601 timestamp immediately before signing the heartbeat message.");
+  }
+  if (addressProfile.kind === "bitcoin") {
+    nextActions.push("Confirm whether the wallet uses legacy signed messages or BIP-322, and keep the address/signing mode consistent.");
+  }
+  if (addressProfile.kind === "stacks") {
+    nextActions.push("Verify the STX address matches the chain you are sending to AIBTC and that the same key signed the message.");
+  }
+  if (!flow) {
+    nextActions.push("State whether this is registration, heartbeat, inbox-read, inbox-reply, or x402 auth for a more targeted debug pass.");
+  }
+
+  return {
+    generatedAt: new Date().toISOString(),
+    input: {
+      chain: chain || null,
+      address: address || null,
+      flow: flow || null,
+      context: context || null,
+      messagePreview: short(message, 140),
+      signaturePresent: Boolean(signature),
+    },
+    classification: {
+      addressKind: addressProfile.kind,
+      addressNetwork: addressProfile.network,
+      messageKind: detectedMessage.kind,
+    },
+    findings,
+    notes: [...addressProfile.notes, detectedMessage.hint],
+    nextActions: Array.from(new Set(nextActions)),
+    escalation:
+      findings.some((item) => item.severity === "high")
+        ? "If the flow still fails after correcting the exact message and signer, escalate to a paid debug request with the full failing payload and expected outcome."
+        : "The payload does not show an obvious fatal formatting problem. A deeper paid debug pass would focus on wallet signing mode, transport headers, or relay-side verification.",
+  };
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
@@ -282,14 +576,6 @@ function buildServiceGaps(projects: Project[]) {
     });
   }
 
-  if (!/signature|verification|bip-137/.test(searchable)) {
-    gaps.push({
-      title: "Signature verification utility",
-      reason: "Agent coordination depends on message signing, but a dedicated verification/debugging utility is not obvious on the public board.",
-      action: "Ship a paid endpoint for signature validation and wallet-auth debugging.",
-    });
-  }
-
   if (!/sales|classified|advert|sponsor/.test(searchable)) {
     gaps.push({
       title: "Sponsored signal and classifieds router",
@@ -334,6 +620,14 @@ function buildServiceProducts(serviceBase: string) {
       price: "free",
       buyer: "Buyers who need the fastest path to a useful request",
       output: "Best-fit requests, copy-paste prompts, and direct contact surface",
+    },
+    {
+      name: "Auth debug",
+      status: "free",
+      endpoint: `${serviceBase}/api/auth-debug`,
+      price: "free",
+      buyer: "Builders debugging AIBTC, wallet, signing, or x402 auth failures",
+      output: "Structured triage for address/message/signature mismatches and the next fix to try",
     },
     {
       name: "Opportunity digest",
@@ -410,6 +704,7 @@ function buildCatalog(serviceBase: string) {
       "/api/catalog": { method: "GET", cost: "free" },
       "/api/examples": { method: "GET", cost: "free" },
       "/api/hire": { method: "GET", cost: "free" },
+      "/api/auth-debug": { method: "GET | POST", cost: "free" },
       "/api/digest": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
       "/api/project-fit": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
       "/api/service-map": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
@@ -433,6 +728,12 @@ function buildHireKit(serviceBase: string) {
         useWhen: "AIBTC, x402, BTC, or STX signing is failing and the buyer needs a bounded debugging pass.",
         prompt:
           "Review this wallet or signature flow, identify the failure path, and tell me the smallest fix that gets it shipping.",
+      },
+      {
+        title: "AIBTC auth triage",
+        useWhen: "A registration, heartbeat, inbox, or wallet-auth step keeps failing and the buyer needs the exact mismatch found.",
+        prompt:
+          "Check this address, message, signature, and failing AIBTC flow. Tell me the most likely exact mismatch and the next thing I should try.",
       },
       {
         title: "x402 integration",
@@ -622,6 +923,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
         <a class="primary" href="${serviceBase}/api/preview">Open free preview</a>
         <a href="${serviceBase}/api/hire">Open hire kit</a>
         <a href="${serviceBase}/api/examples">See example requests</a>
+        <a href="${serviceBase}/api/auth-debug">Auth debug route</a>
         <a href="https://aibtc.com/agents/bc1ql00qwp4mnw6q6ux7hfcjhkj5wdwj4445pc6u9h">AIBTC profile</a>
         <a href="https://github.com/rlucky02/satsmith-agent">Public repo</a>
         <a href="https://aibtc-projects.pages.dev/?id=r_499b082c">AIBTC project board</a>
@@ -697,6 +999,14 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
         <pre>GET ${serviceBase}/api/preview
 
 GET ${serviceBase}/api/hire
+
+POST ${serviceBase}/api/auth-debug
+{
+  "flow": "heartbeat",
+  "address": "SP...",
+  "message": "AIBTC Check-In | 2026-04-09T13:30:00Z",
+  "signature": "<signature>"
+}
 
 POST ${serviceBase}/api/project-fit
 {
@@ -811,6 +1121,16 @@ app.get("/api/examples", (c) => {
         method: "GET",
         url: `${serviceBase}/api/hire`,
       },
+      authDebug: {
+        method: "POST",
+        url: `${serviceBase}/api/auth-debug`,
+        body: {
+          flow: "registration",
+          address: "bc1q...",
+          message: "Bitcoin will be the currency of AIs",
+          signature: "<signature>",
+        },
+      },
       digest: {
         method: "POST",
         url: `${serviceBase}/api/digest`,
@@ -849,6 +1169,36 @@ app.get("/api/hire", (c) => {
     generatedAt: new Date().toISOString(),
     ...buildHireKit(serviceBase),
   });
+});
+
+app.get("/api/auth-debug", (c) => {
+  const serviceBase = new URL(c.req.url).origin;
+  return c.json({
+    generatedAt: new Date().toISOString(),
+    route: `${serviceBase}/api/auth-debug`,
+    method: "POST",
+    description: "Free AIBTC wallet-auth and signature triage for registration, heartbeat, inbox, and x402-adjacent auth failures.",
+    fields: {
+      flow: "registration | heartbeat | inbox-read | inbox-reply | x402",
+      address: "BTC or STX signer address",
+      chain: "optional: btc | stx",
+      message: "exact signed message",
+      signature: "signed payload string",
+      context: "optional failure note or expected behavior",
+    },
+    example: {
+      flow: "registration",
+      address: "bc1q...",
+      message: "Bitcoin will be the currency of AIs",
+      signature: "<signature>",
+      context: "register endpoint says signature invalid",
+    },
+  });
+});
+
+app.post("/api/auth-debug", async (c) => {
+  const body = await parseJsonBody<AuthDebugInput>(c.req.raw);
+  return c.json(buildAuthDebug(body));
 });
 
 app.post(
