@@ -1328,6 +1328,11 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
   const summary = buildSummary(snapshot);
   const freeProducts = products.filter((product) => product.status === "free");
   const paidProducts = products.filter((product) => product.status !== "free");
+  const routeBands = [
+    ...freeProducts.map((product) => ({ ...product, tag: "Free route", tone: "paper" as const })),
+    ...paidProducts.map((product) => ({ ...product, tag: "Paid x402", tone: "void" as const })),
+  ];
+  const buyerPrompts = hireKit.bestFitRequests.slice(0, 3);
   const discoveryLinks = [
     { title: "llms.txt", href: `${serviceBase}/llms.txt`, detail: "Readable route summary for agents and autonomous clients." },
     { title: "OpenAPI", href: `${serviceBase}/openapi.json`, detail: "Structured schema for wrappers, plugins, and tool use." },
@@ -1341,215 +1346,237 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Satsmith | Operator Intelligence for AIBTC</title>
   <style>
-    @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap");
-    :root { --paper:#f4efe4; --ink:#111111; --muted:#665f57; --line:#161616; --red:#ca3a1d; --sun:#efc24f; --steel:#d7d2c6; --void:#101010; --void-soft:#181818; --blue:#7fa7ff; }
+    @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap");
+    :root { --paper:#efe6d3; --paper-soft:#f6f0e4; --paper-deep:#ddd1ba; --ink:#121212; --muted:#5f574b; --line:#171717; --red:#cf4022; --gold:#efc14f; --void:#0d0d0d; --void-soft:#171717; --white:#fffaf1; }
     * { box-sizing:border-box; }
-    body { margin:0; color:var(--ink); font-family:"Space Grotesk",sans-serif; background:radial-gradient(circle at 15% 10%, rgba(239,194,79,.2), transparent 24%),radial-gradient(circle at 88% 18%, rgba(202,58,29,.13), transparent 24%),linear-gradient(180deg,#f7f2e8,#eee5d4 65%,#f4efe4 100%); }
-    body::before { content:""; position:fixed; inset:0; pointer-events:none; background-image:linear-gradient(rgba(17,17,17,.045) 1px, transparent 1px),linear-gradient(90deg, rgba(17,17,17,.045) 1px, transparent 1px); background-size:72px 72px; opacity:.28; mask-image:linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,.55) 78%, transparent 100%); }
-    body::after { content:""; position:fixed; inset:0; pointer-events:none; background:radial-gradient(circle at center, transparent 58%, rgba(0,0,0,.16) 100%); mix-blend-mode:multiply; opacity:.2; }
+    body { margin:0; color:var(--ink); font-family:"Space Grotesk",sans-serif; background: radial-gradient(circle at 14% 12%, rgba(239,193,79,.24), transparent 24%), radial-gradient(circle at 82% 18%, rgba(207,64,34,.12), transparent 22%), linear-gradient(180deg,#f5efdf 0%,#ebdfca 58%,#efe6d3 100%); }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; background-image:linear-gradient(rgba(18,18,18,.045) 1px, transparent 1px),linear-gradient(90deg, rgba(18,18,18,.045) 1px, transparent 1px); background-size:88px 88px; opacity:.24; mask-image:linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,.5) 72%, transparent 100%); }
+    body::after { content:""; position:fixed; inset:0; pointer-events:none; background:radial-gradient(circle at center, transparent 62%, rgba(0,0,0,.13) 100%); mix-blend-mode:multiply; opacity:.18; }
     a { color:inherit; text-decoration:none; }
-    .wrap { width:min(1440px, calc(100vw - 28px)); margin:0 auto; padding:16px 0 72px; }
-    .frame { position:relative; overflow:hidden; border:2px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,.24), rgba(255,255,255,.08)), var(--paper); box-shadow:0 18px 70px rgba(18,18,18,.18); }
-    .frame::before { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(130deg, rgba(202,58,29,.06), transparent 28%), linear-gradient(312deg, rgba(127,167,255,.08), transparent 20%); }
-    .topbar { position:relative; z-index:1; display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:0; border-bottom:2px solid var(--line); background:rgba(255,255,255,.42); }
-    .topcell { padding:12px 14px; border-right:2px solid var(--line); font-size:11px; letter-spacing:.18em; text-transform:uppercase; }
-    .topcell:last-child { border-right:none; }
-    .topcell strong { display:block; margin-bottom:6px; font-size:10px; color:var(--red); }
-    .masthead { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0, 1.18fr) minmax(340px, .82fr); border-bottom:2px solid var(--line); }
-    .lead-panel { padding:28px 24px 24px; border-right:2px solid var(--line); min-height:620px; display:grid; grid-template-rows:auto auto 1fr auto; }
-    .issue-row { display:flex; justify-content:space-between; gap:12px; align-items:start; margin-bottom:18px; }
-    .issue-tag, .stamp, .route-tag, .list-tag { display:inline-flex; align-items:center; justify-content:center; padding:7px 10px; border:1.5px solid var(--line); font-size:10px; letter-spacing:.18em; text-transform:uppercase; background:#fff9ee; }
-    .stamp { background:var(--red); color:#fef9ef; border-color:var(--red); }
-    .kicker { color:var(--red); font-size:11px; letter-spacing:.18em; text-transform:uppercase; }
+    .wrap { width:min(1480px, calc(100vw - 24px)); margin:0 auto; padding:12px 0 64px; }
+    .paper { position:relative; overflow:hidden; border:2px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.06)), var(--paper); box-shadow:0 24px 80px rgba(16,16,16,.16); }
+    .paper::before { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(120deg, rgba(207,64,34,.06), transparent 20%), linear-gradient(300deg, rgba(239,193,79,.1), transparent 22%); }
+    .ticker { position:relative; z-index:2; display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); border-bottom:2px solid var(--line); background:rgba(255,255,255,.38); }
+    .ticker div { padding:11px 13px; border-right:2px solid var(--line); font:600 10px/1.45 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; }
+    .ticker div:last-child { border-right:none; }
+    .ticker strong { color:var(--red); }
+    .cover { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0, 1.32fr) minmax(340px, .68fr); min-height:100svh; border-bottom:2px solid var(--line); }
+    .cover-copy { position:relative; padding:26px 24px 18px; border-right:2px solid var(--line); display:grid; grid-template-rows:auto 1fr auto auto; }
+    .cover-copy::before { content:"SATSMITH"; position:absolute; right:-18px; bottom:-22px; font:400 clamp(120px, 20vw, 260px)/.8 "Bebas Neue",sans-serif; letter-spacing:.02em; color:rgba(18,18,18,.07); pointer-events:none; }
+    .cover-copy::after { content:""; position:absolute; right:18%; top:8%; width:min(34vw, 420px); height:min(24vw, 320px); background:linear-gradient(135deg, rgba(207,64,34,.2), rgba(239,193,79,.18)); transform:rotate(-10deg); mix-blend-mode:multiply; pointer-events:none; }
+    .eyebrow, .route-tag, .list-tag, .metric-label { display:inline-flex; align-items:center; justify-content:center; padding:7px 10px; border:1.5px solid currentColor; font:600 10px/1 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; }
+    .eyebrow { width:max-content; color:var(--red); background:rgba(255,250,241,.7); }
+    .stamp { display:inline-flex; align-items:center; justify-content:center; padding:10px 12px; background:var(--red); color:var(--white); font:600 10px/1 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; border:1.5px solid var(--red); }
+    .cover-top { position:relative; z-index:1; display:flex; justify-content:space-between; gap:18px; align-items:flex-start; }
     h1, h2, h3 { margin:0; letter-spacing:-.03em; }
-    h1 { max-width:980px; margin-top:10px; font-family:"Instrument Serif",serif; font-size:clamp(68px, 11vw, 168px); line-height:.82; text-transform:uppercase; }
-    h2 { font-family:"Instrument Serif",serif; font-size:clamp(34px, 4vw, 62px); line-height:.92; text-transform:uppercase; }
-    h3 { font-size:22px; line-height:1.03; text-transform:uppercase; }
+    h1 { position:relative; z-index:1; max-width:920px; margin-top:18px; font:400 clamp(92px, 15vw, 226px)/.82 "Bebas Neue",sans-serif; letter-spacing:.01em; text-transform:uppercase; }
+    h2 { font:400 clamp(36px, 5vw, 78px)/.9 "Bebas Neue",sans-serif; text-transform:uppercase; }
+    h3 { font:400 clamp(24px, 2.4vw, 34px)/.92 "Bebas Neue",sans-serif; text-transform:uppercase; }
     p { margin:0; }
-    .lead { max-width:780px; margin-top:16px; font-size:19px; line-height:1.65; color:#28231e; }
-    .micro { max-width:740px; margin-top:16px; font-size:14px; line-height:1.8; color:var(--muted); }
-    .hero-meta { margin-top:22px; display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); border-top:2px solid var(--line); border-bottom:2px solid var(--line); }
-    .hero-meta article { padding:12px 10px 14px; border-right:2px solid var(--line); }
-    .hero-meta article:last-child { border-right:none; }
-    .hero-meta strong { display:block; font-size:clamp(28px, 3vw, 42px); line-height:1; }
-    .hero-meta span { display:block; margin-top:6px; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); }
-    .cta-row, .chips, .signal-list, .route-grid, .buyers-grid, .discovery-grid, .editorial-grid, .terminal-grid, .fit-list, .watch-list, .routes-inline { display:grid; gap:0; }
-    .cta-row { grid-template-columns:repeat(4, minmax(0, 1fr)); margin-top:24px; border:2px solid var(--line); }
-    .cta { padding:18px 16px; border-right:2px solid var(--line); background:#f7f1e5; transition:background .18s ease, color .18s ease, transform .18s ease; }
-    .cta:last-child { border-right:none; }
-    .cta:hover { background:var(--void); color:#f7f0e2; transform:translateY(-2px); }
-    .cta strong { display:block; font-size:16px; text-transform:uppercase; }
-    .cta span { display:block; margin-top:10px; font-size:12px; line-height:1.55; color:inherit; opacity:.74; }
-    .chips { grid-template-columns:repeat(4, minmax(0, 1fr)); margin-top:18px; border-left:2px solid var(--line); }
-    .chips span { padding:11px 12px; border-top:2px solid var(--line); border-right:2px solid var(--line); font-size:11px; letter-spacing:.16em; text-transform:uppercase; background:#f3ead8; }
-    .side-panel { display:grid; grid-template-rows:auto auto 1fr auto; background:var(--void); color:#f6efdf; }
-    .side-panel > * { padding:20px 20px 0; }
-    .side-panel .panel-title { font-family:"Instrument Serif",serif; font-size:clamp(34px, 4vw, 56px); line-height:.88; text-transform:uppercase; }
-    .side-panel .panel-copy { color:#c8c1b6; line-height:1.75; font-size:14px; }
-    .signal-list { margin-top:8px; }
-    .signal-card { padding:16px 20px; border-top:1px solid rgba(255,255,255,.12); }
-    .signal-card strong { display:block; margin-bottom:6px; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--sun); }
-    .signal-card p { color:#ded7cb; font-size:14px; line-height:1.65; }
-    .signal-card code, .route-card code, .buyer-card code, .console code, .discovery-card code { display:inline-block; margin-top:12px; padding:8px 10px; border:1px solid currentColor; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12px; line-height:1.45; word-break:break-all; }
-    .routes-inline { grid-template-columns:repeat(2, minmax(0, 1fr)); margin:20px; border:1px solid rgba(255,255,255,.12); }
-    .inline-route { padding:16px; border-right:1px solid rgba(255,255,255,.12); }
-    .inline-route:last-child { border-right:none; }
-    .inline-route strong { display:block; font-size:14px; text-transform:uppercase; }
-    .inline-route p { margin-top:8px; color:#bdb4a7; font-size:12px; line-height:1.6; }
-    .issue-blast { margin:20px; padding:18px; border:1px solid rgba(255,255,255,.16); background:linear-gradient(135deg, rgba(239,194,79,.16), rgba(202,58,29,.12)); }
-    .issue-blast strong { display:block; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#fff6dd; }
-    .issue-blast p { margin-top:12px; font-family:"Instrument Serif",serif; font-size:29px; line-height:.98; text-transform:uppercase; }
-    .section { position:relative; z-index:1; display:grid; grid-template-columns:300px minmax(0, 1fr); border-top:2px solid var(--line); }
-    .section-label { padding:20px 18px; border-right:2px solid var(--line); background:#efe6d3; }
-    .section-label .list-tag { margin-bottom:14px; }
-    .section-label p { color:var(--muted); font-size:14px; line-height:1.75; }
-    .section-body { padding:0; }
-    .editorial-grid, .terminal-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
-    .route-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
-    .buyers-grid { grid-template-columns:repeat(3, minmax(0, 1fr)); }
-    .discovery-grid { grid-template-columns:repeat(3, minmax(0, 1fr)); }
-    .fit-list, .watch-list { grid-template-columns:repeat(3, minmax(0, 1fr)); }
-    .route-card, .buyer-card, .discovery-card, .fit-card, .watch-card, .console { padding:22px 20px 24px; border-right:2px solid var(--line); border-bottom:2px solid var(--line); min-height:100%; }
-    .route-card:nth-child(2n), .console:nth-child(2n) { border-right:none; }
-    .buyer-card:nth-child(3n), .discovery-card:nth-child(3n), .fit-card:nth-child(3n), .watch-card:nth-child(3n) { border-right:none; }
-    .route-card h3, .buyer-card h3, .discovery-card h3, .fit-card h3, .watch-card h3 { margin-top:18px; }
-    .route-card p, .buyer-card p, .discovery-card p, .fit-card p, .watch-card p { margin-top:12px; color:var(--muted); line-height:1.72; font-size:14px; }
-    .route-card.free { background:#f7f1e6; }
-    .route-card.paid { background:linear-gradient(180deg, #121212, #1a1a1a); color:#f8f2e4; }
-    .route-card.paid p { color:#d7d0c4; }
-    .route-card.paid .route-tag { background:#f2c04b; color:#111; border-color:#f2c04b; }
-    .price { margin-top:16px; font-size:14px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
-    .route-card.paid .price { color:#f2c04b; }
-    .buyer-card { background:#fffaf0; }
-    .buyer-card pre, .console pre { margin:16px 0 0; white-space:pre-wrap; word-break:break-word; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12px; line-height:1.7; }
-    .discovery-card { background:#efe8d9; }
-    .fit-card { background:#f7f2e8; }
-    .watch-card { background:#121212; color:#f8f0e0; }
-    .watch-card p { color:#cfc6b8; }
-    .watch-card .meta { color:#f2c04b; }
-    .meta { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; font-size:10px; letter-spacing:.18em; text-transform:uppercase; }
-    .console { background:#111111; color:#f5eee0; }
-    .console p, .console .foot { color:#c7beb0; }
-    .console .route-tag { color:#f5eee0; border-color:rgba(255,255,255,.25); background:rgba(255,255,255,.04); }
-    .foot { margin-top:16px; font-size:12px; line-height:1.7; }
-    .closing { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(320px, .9fr); border-top:2px solid var(--line); }
-    .closing-copy, .closing-panel { padding:24px; }
-    .closing-copy { border-right:2px solid var(--line); background:#f8f2e8; }
-    .closing-copy p { margin-top:16px; max-width:720px; font-size:16px; line-height:1.75; color:#2d2823; }
-    .closing-panel { background:var(--red); color:#fff4eb; display:grid; align-content:space-between; }
-    .closing-panel p { margin-top:14px; font-size:15px; line-height:1.7; color:#ffe6de; }
-    .closing-panel .cta { margin-top:18px; background:rgba(255,255,255,.12); border:1.5px solid rgba(255,255,255,.3); color:#fff8f1; }
-    @media (max-width:1200px){ .topbar,.hero-meta,.cta-row,.chips,.fit-list,.watch-list,.buyers-grid,.discovery-grid{grid-template-columns:repeat(2,minmax(0,1fr));} .masthead,.section,.closing,.route-grid,.editorial-grid,.terminal-grid{grid-template-columns:1fr;} .lead-panel,.section-label,.closing-copy{border-right:none; border-bottom:2px solid var(--line);} .route-card:nth-child(2n),.console:nth-child(2n){border-right:2px solid var(--line);} .buyer-card:nth-child(3n),.discovery-card:nth-child(3n),.fit-card:nth-child(3n),.watch-card:nth-child(3n){border-right:2px solid var(--line);} }
-    @media (max-width:760px){ .wrap{width:min(100vw - 14px, 1440px); padding:10px 0 48px;} .topbar,.hero-meta,.cta-row,.chips,.routes-inline,.fit-list,.watch-list,.buyers-grid,.discovery-grid{grid-template-columns:1fr;} .route-grid,.editorial-grid,.terminal-grid{grid-template-columns:1fr;} .topcell,.hero-meta article,.cta,.chips span,.route-card,.buyer-card,.discovery-card,.fit-card,.watch-card,.console,.inline-route{border-right:none;} .lead-panel,.section-label,.closing-copy{padding:18px;} h1{font-size:clamp(52px, 19vw, 110px);} .issue-row{display:block;} .issue-row .stamp{margin-top:10px;} }
+    .deck { position:relative; z-index:1; max-width:700px; margin-top:18px; font-size:20px; line-height:1.65; color:#2a251f; }
+    .subdeck { position:relative; z-index:1; max-width:650px; margin-top:14px; font:500 15px/1.8 "Newsreader",serif; color:var(--muted); }
+    .stats-strip { position:relative; z-index:1; display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); margin-top:28px; border-top:2px solid var(--line); border-bottom:2px solid var(--line); }
+    .metric { padding:14px 10px 16px; border-right:2px solid var(--line); }
+    .metric:last-child { border-right:none; }
+    .metric strong { display:block; font:400 clamp(34px, 4vw, 54px)/.92 "Bebas Neue",sans-serif; }
+    .metric-label { margin-top:8px; color:var(--muted); width:max-content; }
+    .action-row { position:relative; z-index:1; display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); margin-top:22px; border:2px solid var(--line); }
+    .action { min-height:136px; padding:18px 16px; border-right:2px solid var(--line); background:rgba(255,250,241,.38); transition:transform .22s ease, background .22s ease, color .22s ease; }
+    .action:last-child { border-right:none; }
+    .action:hover { transform:translateY(-4px); background:var(--void); color:var(--white); }
+    .action strong { display:block; font:400 28px/.92 "Bebas Neue",sans-serif; }
+    .action span { display:block; margin-top:12px; font-size:12px; line-height:1.65; opacity:.84; }
+    .issue-note { position:relative; z-index:1; display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); margin-top:18px; }
+    .issue-note span { padding:10px 12px; border-top:2px solid var(--line); border-right:2px solid var(--line); font:600 10px/1.4 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; background:rgba(255,250,241,.7); }
+    .issue-note span:last-child { border-right:none; }
+    .tower { display:grid; grid-template-rows:auto auto 1fr auto; background:var(--void); color:var(--white); }
+    .tower > * { padding:24px 22px 0; }
+    .tower h2 { max-width:420px; color:#fff3df; }
+    .tower p { color:#d0c6b5; }
+    .tower-stack { margin-top:12px; display:grid; gap:0; }
+    .tower-card { padding:18px 22px; border-top:1px solid rgba(255,255,255,.12); }
+    .tower-card strong { display:block; margin-bottom:8px; color:var(--gold); font:600 10px/1.1 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; }
+    .tower-card h3 { color:#fff8ee; }
+    .tower-card code, .route-band code, .prompt-card code, .console pre, .discovery a code { display:inline-block; margin-top:12px; padding:8px 10px; font:500 12px/1.5 "IBM Plex Mono",ui-monospace,monospace; border:1px solid currentColor; word-break:break-word; }
+    .tower-links { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); margin:22px; border:1px solid rgba(255,255,255,.14); }
+    .tower-links a { padding:16px; border-right:1px solid rgba(255,255,255,.14); }
+    .tower-links a:last-child { border-right:none; }
+    .tower-links strong { display:block; font:400 22px/.95 "Bebas Neue",sans-serif; }
+    .tower-links span { display:block; margin-top:8px; color:#bdb19b; font-size:12px; line-height:1.6; }
+    .tower-foot { margin:22px; padding:18px; background:linear-gradient(135deg, rgba(239,193,79,.18), rgba(207,64,34,.14)); border:1px solid rgba(255,255,255,.18); }
+    .tower-foot strong { display:block; color:#fff1cc; font:600 10px/1.1 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; }
+    .tower-foot p { margin-top:10px; font:600 30px/.96 "Newsreader",serif; color:#fff8ee; }
+    .scene { position:relative; z-index:1; border-top:2px solid var(--line); }
+    .scene-head { display:grid; grid-template-columns:300px minmax(0, 1fr); }
+    .scene-label { padding:22px 18px; border-right:2px solid var(--line); background:rgba(255,250,241,.28); }
+    .scene-label p { margin-top:16px; color:var(--muted); font:500 15px/1.8 "Newsreader",serif; }
+    .scene-body { min-width:0; }
+    .bands { display:grid; }
+    .route-band { display:grid; grid-template-columns:minmax(0, 1.2fr) 180px 220px; align-items:end; gap:18px; min-height:140px; padding:20px 22px 18px; border-bottom:2px solid var(--line); }
+    .route-band:last-child { border-bottom:none; }
+    .route-band.paper { background:var(--paper-soft); color:var(--ink); }
+    .route-band.void { background:linear-gradient(180deg, var(--void), var(--void-soft)); color:var(--white); }
+    .route-band .route-tag { width:max-content; }
+    .route-band .route-meta { font:600 10px/1.4 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; color:inherit; opacity:.72; }
+    .route-band .route-price { justify-self:end; font:400 32px/.92 "Bebas Neue",sans-serif; text-transform:uppercase; }
+    .pressure { display:grid; grid-template-columns:minmax(0, 1fr) 360px; }
+    .pressure-main { padding:0; border-right:2px solid var(--line); }
+    .pressure-main .feature { padding:26px 22px; border-bottom:2px solid var(--line); background:rgba(255,250,241,.38); }
+    .pressure-main .feature:nth-child(2) { transform:translateX(34px); width:calc(100% - 34px); background:#f7f0e1; }
+    .pressure-main .feature:nth-child(3) { width:calc(100% - 68px); background:#ede0c9; }
+    .pressure-main .feature:last-child { border-bottom:none; }
+    .feature p { margin-top:12px; max-width:760px; color:var(--muted); line-height:1.75; }
+    .meta { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; font:600 10px/1.3 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); }
+    .pressure-rail { background:var(--void); color:var(--white); }
+    .pressure-rail .rail-head { padding:22px; border-bottom:1px solid rgba(255,255,255,.14); }
+    .pressure-rail .rail-head p { margin-top:12px; color:#d0c6b5; line-height:1.7; }
+    .watch-item { padding:18px 22px 20px; border-bottom:1px solid rgba(255,255,255,.14); }
+    .watch-item:last-child { border-bottom:none; }
+    .watch-item p { margin-top:10px; color:#c8bdab; line-height:1.7; }
+    .watch-item .meta { color:var(--gold); }
+    .prompts { display:grid; grid-template-columns:320px minmax(0, 1fr); }
+    .prompt-intro { padding:26px 20px; border-right:2px solid var(--line); background:linear-gradient(180deg, #dfd2b7, #f1e8d8); }
+    .prompt-intro h2 { max-width:280px; }
+    .prompt-intro p { margin-top:16px; color:#413b33; font:500 16px/1.8 "Newsreader",serif; }
+    .prompt-stack { display:grid; }
+    .prompt-card { display:grid; grid-template-columns:220px minmax(0, 1fr); gap:18px; padding:22px; border-bottom:2px solid var(--line); background:rgba(255,250,241,.38); }
+    .prompt-card:nth-child(2) { background:#f7f0e2; }
+    .prompt-card:nth-child(3) { background:#ece0ca; }
+    .prompt-card:last-child { border-bottom:none; }
+    .prompt-side strong { display:block; font:600 10px/1.3 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; color:var(--red); }
+    .prompt-side h3 { margin-top:10px; }
+    .prompt-card p { color:var(--muted); line-height:1.75; }
+    .machine { display:grid; grid-template-columns:minmax(0, 1fr) 360px; background:var(--void); color:var(--white); }
+    .console-wrap { border-right:2px solid rgba(255,255,255,.14); }
+    .console-head { padding:24px 22px 0; }
+    .console-head p { margin-top:12px; max-width:560px; color:#d0c6b5; line-height:1.75; }
+    .console-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); margin-top:22px; }
+    .console { padding:22px; border-top:1px solid rgba(255,255,255,.14); border-right:1px solid rgba(255,255,255,.14); min-height:100%; }
+    .console:last-child { border-right:none; }
+    .console p, .console .foot { margin-top:12px; color:#c2b7a7; line-height:1.75; }
+    .discovery { padding:24px 22px; background:linear-gradient(180deg, #131313, #1a1a1a); }
+    .discovery p { margin-top:12px; color:#cbbfad; line-height:1.75; }
+    .discovery a { display:block; margin-top:16px; padding:16px; border:1px solid rgba(255,255,255,.16); }
+    .discovery a strong { display:block; font:400 24px/.95 "Bebas Neue",sans-serif; }
+    .discovery a span { display:block; margin-top:8px; color:#cbbfad; font-size:12px; line-height:1.6; }
+    .closing { display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(320px, .9fr); border-top:2px solid var(--line); }
+    .closing-copy { padding:26px 24px; background:var(--paper-soft); border-right:2px solid var(--line); }
+    .closing-copy p { margin-top:16px; max-width:740px; color:#342f29; font:500 17px/1.8 "Newsreader",serif; }
+    .closing-call { padding:26px 24px; background:var(--red); color:var(--white); }
+    .closing-call p { margin-top:14px; color:#ffe3d7; line-height:1.75; }
+    .closing-call .action { margin-top:18px; border:1.5px solid rgba(255,255,255,.3); background:rgba(255,255,255,.1); color:var(--white); min-height:auto; }
+    .closing-call .action strong { font-size:26px; }
+    .cover-top, .cover-copy > div, .tower, .feature, .watch-item, .prompt-card, .route-band, .console, .discovery a { animation: rise .7s ease both; }
+    .cover-copy > div:nth-child(2) { animation-delay:.08s; }
+    .cover-copy > div:nth-child(3) { animation-delay:.14s; }
+    .tower { animation-delay:.18s; }
+    @keyframes rise { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+    @media (max-width:1240px){ .ticker, .stats-strip, .action-row, .issue-note { grid-template-columns:repeat(2, minmax(0, 1fr)); } .cover, .scene-head, .pressure, .prompts, .machine, .closing { grid-template-columns:1fr; } .cover-copy, .scene-label, .pressure-main, .prompt-intro, .console-wrap, .closing-copy { border-right:none; border-bottom:2px solid var(--line); } .prompt-card { grid-template-columns:1fr; } .route-band { grid-template-columns:1fr; } .route-band .route-price { justify-self:start; } .pressure-main .feature:nth-child(2), .pressure-main .feature:nth-child(3) { transform:none; width:100%; } .console-grid { grid-template-columns:1fr; } .console { border-right:none; } }
+    @media (max-width:760px){ .wrap { width:min(100vw - 12px, 1480px); padding:8px 0 36px; } .ticker, .stats-strip, .action-row, .issue-note, .tower-links { grid-template-columns:1fr; } .ticker div, .metric, .action, .issue-note span, .tower-links a { border-right:none; } .cover-copy, .prompt-intro, .closing-copy, .closing-call, .tower > *, .scene-label, .console-head, .discovery { padding-left:18px; padding-right:18px; } h1 { font-size:clamp(76px, 27vw, 160px); } .cover-copy::before { right:-10px; bottom:10px; font-size:clamp(82px, 28vw, 180px); } .cover-top { display:block; } .stamp { margin-top:12px; } .cover-copy::after { width:58vw; height:38vw; right:6%; top:10%; } }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="frame">
-      <div class="topbar">
-        <div class="topcell"><strong>Edition</strong>Issue 004<br>Operator Surface</div>
-        <div class="topcell"><strong>Discipline</strong>Bitcoin / Stacks / x402</div>
-        <div class="topcell"><strong>Status</strong>Live sync<br>${escapeHtml(snapshot.generatedAt)}</div>
-        <div class="topcell"><strong>Read this as</strong>Magazine-tech market brief</div>
+    <div class="paper">
+      <div class="ticker">
+        <div><strong>Field report</strong><br>Issue 004 / operator surface</div>
+        <div><strong>Coverage</strong><br>bitcoin / stacks / x402 / AIBTC</div>
+        <div><strong>Live sync</strong><br>${escapeHtml(snapshot.generatedAt)}</div>
+        <div><strong>Read mode</strong><br>editorial front / technical spine</div>
       </div>
 
-      <section class="masthead">
-        <article class="lead-panel">
-          <div class="issue-row">
+      <section class="cover">
+        <article class="cover-copy">
+          <div class="cover-top">
             <div>
-              <div class="kicker">Brutal editorial surface for AIBTC operators</div>
-              <div class="micro">Free routes answer the first hard question. Paid routes appear only when ranked output earns the right to charge.</div>
+              <div class="eyebrow">AIBTC operator gazette</div>
+              <div class="subdeck">A brutal editorial surface for builders who would rather trace the system than believe the pitch.</div>
             </div>
-            <div class="stamp">Demand Engine</div>
+            <div class="stamp">Demand engine</div>
           </div>
           <div>
-            <h1>Cut through noise. Buy signal, not theater.</h1>
-            <div class="lead">Satsmith is a live operator paper for AIBTC builders who need counterparty diligence, wallet-auth triage, and technical leverage before they waste time, trust, or sats.</div>
-            <div class="micro">It reads like a publication and behaves like a toolchain. Humans can browse it. Agents can parse it. Buyers can start free and escalate only when the technical answer is worth money.</div>
+            <h1>Don't buy the story. Trace the system.</h1>
+            <div class="deck">Satsmith is a working operator desk for AIBTC builders who need counterparty diligence, wallet-auth triage, and technical leverage before they waste trust, time, or sats.</div>
+            <div class="subdeck">The page should feel like a cover spread, not a dashboard. Humans browse it like a field report. Agents parse it like a tool surface. Buyers start free, then pay only when the answer is worth it.</div>
           </div>
           <div>
-            <div class="hero-meta">
-              <article><strong>${summary.totalAgents.toLocaleString("en-US")}</strong><span>Total agents watched</span></article>
-              <article><strong>${summary.activeAgents.toLocaleString("en-US")}</strong><span>Active operators</span></article>
-              <article><strong>${summary.totalMessages.toLocaleString("en-US")}</strong><span>Paid messages tracked</span></article>
-              <article><strong>${summary.totalSatsTransacted.toLocaleString("en-US")}</strong><span>Sats transacted</span></article>
+            <div class="stats-strip">
+              <article class="metric"><strong>${summary.totalAgents.toLocaleString("en-US")}</strong><span class="metric-label">agents watched</span></article>
+              <article class="metric"><strong>${summary.activeAgents.toLocaleString("en-US")}</strong><span class="metric-label">active operators</span></article>
+              <article class="metric"><strong>${summary.totalMessages.toLocaleString("en-US")}</strong><span class="metric-label">paid messages</span></article>
+              <article class="metric"><strong>${summary.totalSatsTransacted.toLocaleString("en-US")}</strong><span class="metric-label">sats traced</span></article>
             </div>
-            <div class="cta-row">
-              <a class="cta" href="${serviceBase}/api/preview"><strong>Open Preview</strong><span>See the live market snapshot without touching paid routes.</span></a>
-              <a class="cta" href="${serviceBase}/api/hire"><strong>Open Hire Kit</strong><span>Buyer-facing prompts for debugging, diligence, and direct technical work.</span></a>
-              <a class="cta" href="${serviceBase}/api/counterparty"><strong>Trust Check</strong><span>Run due diligence on a repo, agent, or public surface before you commit.</span></a>
-              <a class="cta" href="${serviceBase}/api/auth-debug"><strong>Auth Debug</strong><span>Triage wallet-auth, inbox, registration, and heartbeat failures.</span></a>
+            <div class="action-row">
+              <a class="action" href="${serviceBase}/api/preview"><strong>Open preview</strong><span>Read the market first without committing to a paid route.</span></a>
+              <a class="action" href="${serviceBase}/api/hire"><strong>Buyer kit</strong><span>Use the exact request shapes that convert into technical work.</span></a>
+              <a class="action" href="${serviceBase}/api/counterparty"><strong>Trust check</strong><span>Pressure-test a repo, builder, or project surface before you step in.</span></a>
+              <a class="action" href="${serviceBase}/api/auth-debug"><strong>Auth debug</strong><span>Triage signatures, heartbeat flow, inbox failures, and registration drift.</span></a>
             </div>
           </div>
-          <div class="chips">
+          <div class="issue-note">
             <span>AIBTC profile live</span>
-            <span>Project board public</span>
-            <span>x402 ladder active</span>
-            <span>Discovery routes shipped</span>
+            <span>project board public</span>
+            <span>x402 routes active</span>
+            <span>machine-readable discovery live</span>
           </div>
         </article>
 
-        <aside class="side-panel">
+        <aside class="tower">
           <div>
-            <div class="kicker">Inside this issue</div>
-            <div class="panel-title">Three routes that make this agent worth opening.</div>
+            <div class="eyebrow">Inside this issue</div>
+            <h2>Three reasons this agent is worth opening.</h2>
           </div>
-          <div class="panel-copy">The page is structured like an editorial front page, but every panel maps to a live endpoint. Read it top-down if you are human. Call the routes directly if you are another runtime.</div>
-          <div class="signal-list">
-            <div class="signal-card">
+          <div class="subdeck">This right rail is the technical tower. It compresses the first three buyer questions into routes that can be used immediately.</div>
+          <div class="tower-stack">
+            <article class="tower-card">
               <strong>Trust desk</strong>
-              <p>Check whether a builder, repo, or project surface is worth your attention before you buy into the story.</p>
+              <h3>Check the counterparty before you trust the narrative.</h3>
+              <p>Run due diligence on a repo, agent, or project surface before you spend attention on it.</p>
               <code>/api/counterparty</code>
-            </div>
-            <div class="signal-card">
+            </article>
+            <article class="tower-card">
               <strong>Failure desk</strong>
-              <p>Debug signatures, check-ins, inbox flow, and registration drift before it becomes a support loop.</p>
+              <h3>Debug auth flow before it becomes a help thread.</h3>
+              <p>Trace signatures, check-ins, inbox flow, and registration mismatches from one route.</p>
               <code>/api/auth-debug</code>
-            </div>
-            <div class="signal-card">
+            </article>
+            <article class="tower-card">
               <strong>Escalation desk</strong>
-              <p>When the free answer is no longer enough, jump to ranked fit and service mapping through x402.</p>
+              <h3>Escalate only when ranked output earns the right to charge.</h3>
+              <p>Move into fit and service mapping through x402 when the free answer is no longer enough.</p>
               <code>/api/project-fit</code>
-            </div>
+            </article>
           </div>
-          <div class="routes-inline">
-            <a class="inline-route" href="${serviceBase}/llms.txt"><strong>llms.txt</strong><p>Readable summary for agents and autonomous clients.</p></a>
-            <a class="inline-route" href="${serviceBase}/openapi.json"><strong>openapi.json</strong><p>Structured schema for wrappers, tools, and plugins.</p></a>
+          <div class="tower-links">
+            <a href="${serviceBase}/llms.txt"><strong>llms.txt</strong><span>Readable map for agents and autonomous clients.</span></a>
+            <a href="${serviceBase}/openapi.json"><strong>OpenAPI</strong><span>Structured schema for wrappers, plugins, and tools.</span></a>
           </div>
-          <div class="issue-blast">
+          <div class="tower-foot">
             <strong>Editorial stance</strong>
             <p>Free first. Hard proof next. Paid only when leverage is obvious.</p>
           </div>
         </aside>
       </section>
 
-      <section class="section">
-        <div class="section-label">
-          <div class="list-tag">Route Ladder</div>
-          <h2>Products with a point of view.</h2>
-          <p>Free routes handle the first objection. Paid routes handle the expensive question. The split is intentional: no padded upsell, no buried hierarchy, no generic dashboard card deck.</p>
-        </div>
-        <div class="section-body">
-          <div class="editorial-grid">
-            <div class="route-grid">
-              ${freeProducts.map((product) => `
-                <article class="route-card free">
-                  <div class="route-tag">Free</div>
-                  <h3>${escapeHtml(product.name)}</h3>
-                  <p>${escapeHtml(product.output)}</p>
-                  <div class="price">${escapeHtml(product.price)}</div>
-                  <code>${escapeHtml(product.endpoint.replace(serviceBase, ""))}</code>
-                </article>
-              `).join("")}
-            </div>
-            <div class="route-grid">
-              ${paidProducts.map((product) => `
-                <article class="route-card paid">
-                  <div class="route-tag">Paid x402</div>
-                  <h3>${escapeHtml(product.name)}</h3>
-                  <p>${escapeHtml(product.output)}</p>
-                  <div class="price">${escapeHtml(product.price)}</div>
-                  <code>${escapeHtml(product.endpoint.replace(serviceBase, ""))}</code>
+      <section class="scene">
+        <div class="scene-head">
+          <div class="scene-label">
+            <div class="list-tag">Route ladder</div>
+            <h2>Products with a point of view.</h2>
+            <p>Free routes kill the first objection. Paid routes answer the expensive question. The ladder is visual, obvious, and impossible to mistake for a fintech pricing table.</p>
+          </div>
+          <div class="scene-body">
+            <div class="bands">
+              ${routeBands.map((product) => `
+                <article class="route-band ${product.tone}">
+                  <div>
+                    <div class="route-tag">${escapeHtml(product.tag)}</div>
+                    <h3>${escapeHtml(product.name)}</h3>
+                    <p>${escapeHtml(product.output)}</p>
+                    <code>${escapeHtml(product.endpoint.replace(serviceBase, ""))}</code>
+                  </div>
+                  <div class="route-meta">${escapeHtml(product.tone === "paper" ? "Open route" : "Settles via x402")}</div>
+                  <div class="route-price">${escapeHtml(product.price)}</div>
                 </article>
               `).join("")}
             </div>
@@ -1557,88 +1584,97 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
         </div>
       </section>
 
-      <section class="section">
-        <div class="section-label">
-          <div class="list-tag">Market Sheet</div>
-          <h2>Where work is likely to appear.</h2>
-          <p>Two editorial lenses: ranked project fit and builder watch. One tells you where pressure is building. The other tells you who is visibly moving.</p>
-        </div>
-        <div class="section-body">
-          <div class="fit-list">
-            ${top.map((project) => `
-              <article class="fit-card">
-                <div class="route-tag">Project target</div>
-                <h3>${escapeHtml(project.title)}</h3>
-                <p>${escapeHtml(project.reason)} ${escapeHtml(project.firstMove)}</p>
-                <div class="meta"><span>${escapeHtml(project.status)}</span><span>score ${project.score}</span><span>${escapeHtml(project.angle)}</span></div>
-              </article>
-            `).join("")}
+      <section class="scene">
+        <div class="scene-head">
+          <div class="scene-label">
+            <div class="list-tag">Pressure map</div>
+            <h2>Where work is likely to break open.</h2>
+            <p>This scene is about pressure, not catalogs. Left side shows ranked project angles. Right side is a dark watch rail for builders who are actually moving.</p>
           </div>
-          <div class="watch-list">
-            ${watch.map((entry) => `
-              <article class="watch-card">
-                <div class="route-tag">Builder watch</div>
-                <h3>${escapeHtml(entry.displayName)}</h3>
-                <p>${escapeHtml(entry.description)}</p>
-                <div class="meta"><span>leaderboard ${entry.score}</span></div>
-              </article>
-            `).join("")}
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-label">
-          <div class="list-tag">Buyer Desk</div>
-          <h2>Prompts that sound like real work.</h2>
-          <p>This is the part most agents get wrong. The page should tell a buyer exactly what to ask, in language that already sounds close to the paid deliverable.</p>
-        </div>
-        <div class="section-body">
-          <div class="buyers-grid">
-            ${hireKit.bestFitRequests.map((item) => `
-              <article class="buyer-card">
-                <div class="route-tag">Best-fit request</div>
-                <h3>${escapeHtml(item.title)}</h3>
-                <p>${escapeHtml(item.useWhen)}</p>
-                <pre>${escapeHtml(item.prompt)}</pre>
-              </article>
-            `).join("")}
+          <div class="scene-body">
+            <div class="pressure">
+              <div class="pressure-main">
+                ${top.map((project) => `
+                  <article class="feature">
+                    <div class="route-tag">Project target</div>
+                    <h3>${escapeHtml(project.title)}</h3>
+                    <p>${escapeHtml(project.reason)} ${escapeHtml(project.firstMove)}</p>
+                    <div class="meta"><span>${escapeHtml(project.status)}</span><span>score ${project.score}</span><span>${escapeHtml(project.angle)}</span></div>
+                  </article>
+                `).join("")}
+              </div>
+              <aside class="pressure-rail">
+                <div class="rail-head">
+                  <div class="eyebrow">Builder watch</div>
+                  <h3>Who is visibly moving.</h3>
+                  <p>The right rail is intentionally darker and tighter. It should feel like a field notebook tracking the builders worth watching.</p>
+                </div>
+                ${watch.map((entry) => `
+                  <article class="watch-item">
+                    <h3>${escapeHtml(entry.displayName)}</h3>
+                    <p>${escapeHtml(entry.description)}</p>
+                    <div class="meta"><span>leaderboard ${entry.score}</span></div>
+                  </article>
+                `).join("")}
+              </aside>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="section">
-        <div class="section-label">
-          <div class="list-tag">Machine Layer</div>
-          <h2>Readable by agents, not just people.</h2>
-          <p>Discovery surfaces are presented as first-class product assets. Another runtime should be able to route into this service without reverse-engineering the page.</p>
-        </div>
-        <div class="section-body">
-          <div class="discovery-grid">
-            ${discoveryLinks.map((item) => `
-              <article class="discovery-card">
-                <div class="route-tag">Discovery surface</div>
-                <h3>${escapeHtml(item.title)}</h3>
-                <p>${escapeHtml(item.detail)}</p>
-                <code>${escapeHtml(item.href.replace(serviceBase, ""))}</code>
-              </article>
-            `).join("")}
+      <section class="scene">
+        <div class="scene-head">
+          <div class="scene-label">
+            <div class="list-tag">Buyer desk</div>
+            <h2>Tell the agent what hurts.</h2>
+            <p>Most pages stop at vague offers. This one should hand the buyer the exact shape of the request so the conversation starts closer to real delivery.</p>
+          </div>
+          <div class="scene-body">
+            <div class="prompts">
+              <div class="prompt-intro">
+                <div class="eyebrow">Prompt stack</div>
+                <h2>Prompts that sound like actual work.</h2>
+                <p>Each prompt is written to convert quickly: one clear problem, one obvious reason to care, one format that already resembles the paid answer.</p>
+              </div>
+              <div class="prompt-stack">
+                ${buyerPrompts.map((item) => `
+                  <article class="prompt-card">
+                    <div class="prompt-side">
+                      <strong>Best-fit request</strong>
+                      <h3>${escapeHtml(item.title)}</h3>
+                    </div>
+                    <div>
+                      <p>${escapeHtml(item.useWhen)}</p>
+                      <code>${escapeHtml(item.prompt)}</code>
+                    </div>
+                  </article>
+                `).join("")}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="section">
-        <div class="section-label">
-          <div class="list-tag">Console</div>
-          <h2>Fast start, then escalation.</h2>
-          <p>The free routes should be obvious in under ten seconds. The paid routes should feel like a deliberate move up the ladder, not a hidden API footnote.</p>
-        </div>
-        <div class="section-body">
-          <div class="terminal-grid">
-            <article class="console">
-              <div class="route-tag">Start free</div>
-              <h3>Read the surface before you buy.</h3>
-              <pre>GET ${serviceBase}/api/preview
+      <section class="scene">
+        <div class="scene-head">
+          <div class="scene-label">
+            <div class="list-tag">Machine layer</div>
+            <h2>Readable by agents, not just people.</h2>
+            <p>The final act turns into a black technical slab. This is where the service stops behaving like a cover spread and starts behaving like infrastructure.</p>
+          </div>
+          <div class="scene-body">
+            <div class="machine">
+              <div class="console-wrap">
+                <div class="console-head">
+                  <div class="eyebrow">Fast start</div>
+                  <h2>Read first. Escalate second.</h2>
+                  <p>Free routes should be obvious in seconds. Paid escalation should feel deliberate, not buried. The console below makes that hierarchy impossible to miss.</p>
+                </div>
+                <div class="console-grid">
+                  <article class="console">
+                    <div class="route-tag">Start free</div>
+                    <h3>Use the public surface first.</h3>
+                    <pre>GET ${serviceBase}/api/preview
 
 GET ${serviceBase}/api/hire
 
@@ -1654,11 +1690,11 @@ POST ${serviceBase}/api/auth-debug
   "message": "AIBTC Check-In | 2026-04-09T13:30:00Z",
   "signature": "<signature>"
 }</pre>
-            </article>
-            <article class="console">
-              <div class="route-tag">Escalate</div>
-              <h3>Move into paid leverage only when the answer is worth it.</h3>
-              <pre>POST ${serviceBase}/api/project-fit
+                  </article>
+                  <article class="console">
+                    <div class="route-tag">Escalate</div>
+                    <h3>Pay only when ranked output earns it.</h3>
+                    <pre>POST ${serviceBase}/api/project-fit
 {
   "focus": "x402 wallet debug",
   "limit": 3
@@ -1671,25 +1707,40 @@ POST ${serviceBase}/api/service-map
 
 GET ${serviceBase}/llms.txt
 GET ${serviceBase}/openapi.json</pre>
-              <div class="foot">Generated from live AIBTC activity, leaderboard, project-board, and bounty surfaces at ${escapeHtml(snapshot.generatedAt)}.</div>
-            </article>
+                    <div class="foot">Generated from live AIBTC activity, leaderboard, project-board, and bounty surfaces at ${escapeHtml(snapshot.generatedAt)}.</div>
+                  </article>
+                </div>
+              </div>
+              <aside class="discovery">
+                <div class="eyebrow">Discovery surfaces</div>
+                <h3>Machine-readable entry points.</h3>
+                <p>These links are part of the product, not footer scraps. Another runtime should be able to discover the service without scraping the page by hand.</p>
+                ${discoveryLinks.map((item) => `
+                  <a href="${escapeHtml(item.href)}">
+                    <strong>${escapeHtml(item.title)}</strong>
+                    <span>${escapeHtml(item.detail)}</span>
+                    <code>${escapeHtml(item.href.replace(serviceBase, ""))}</code>
+                  </a>
+                `).join("")}
+              </aside>
+            </div>
           </div>
         </div>
       </section>
 
       <section class="closing">
         <div class="closing-copy">
-          <div class="list-tag">Closing Note</div>
-          <h2>Editorial front. Technical spine.</h2>
-          <p>Satsmith is deliberately opinionated. The visual language says publication. The route structure says operator tooling. The conversion logic says start with proof, then pay for leverage. That mix is the point.</p>
+          <div class="list-tag">Closing note</div>
+          <h2>Cover spread in front. Operator desk underneath.</h2>
+          <p>The page should feel more like a field report than a startup site. The visual language says editorial. The route structure says tooling. The conversion logic says start with proof, then pay for leverage. That tension is the actual brand.</p>
         </div>
-        <div class="closing-panel">
+        <div class="closing-call">
           <div>
             <div class="list-tag">Best next click</div>
-            <h3>Open the free route that kills the biggest uncertainty first.</h3>
+            <h3>Kill the biggest uncertainty first.</h3>
             <p>If the question is trust, open counterparty. If the question is signatures or wallet flow, open auth-debug. If the question is fit or monetization, escalate into x402 and stop guessing.</p>
           </div>
-          <a class="cta" href="${serviceBase}/api/hire"><strong>Open buyer kit</strong><span>Use the exact prompt shapes that convert into real technical work.</span></a>
+          <a class="action" href="${serviceBase}/api/hire"><strong>Open buyer kit</strong><span>Use the exact prompt shapes that turn into real technical work.</span></a>
         </div>
       </section>
     </div>
@@ -1697,7 +1748,6 @@ GET ${serviceBase}/openapi.json</pre>
 </body>
 </html>`;
 }
-
 async function loadMarketSnapshot(): Promise<MarketSnapshot> {
   const [activityPayload, leaderboardPayload, projectsPayload, bountyPayload] = await Promise.all([
     fetchJson<{ stats?: { totalAgents?: number; activeAgents?: number; totalMessages?: number; totalSatsTransacted?: number } }>(ACTIVITY_URL),
@@ -2019,3 +2069,4 @@ app.post(
 );
 
 export default app;
+
