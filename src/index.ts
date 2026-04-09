@@ -1349,13 +1349,19 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap");
     :root { --paper:#efe6d3; --paper-soft:#f6f0e4; --paper-deep:#ddd1ba; --ink:#121212; --muted:#5f574b; --line:#171717; --red:#cf4022; --gold:#efc14f; --void:#0d0d0d; --void-soft:#171717; --white:#fffaf1; }
     * { box-sizing:border-box; }
-    body { margin:0; color:var(--ink); font-family:"Space Grotesk",sans-serif; background: radial-gradient(circle at 14% 12%, rgba(239,193,79,.24), transparent 24%), radial-gradient(circle at 82% 18%, rgba(207,64,34,.12), transparent 22%), linear-gradient(180deg,#f5efdf 0%,#ebdfca 58%,#efe6d3 100%); }
+    html { scroll-behavior:smooth; }
+    body { margin:0; color:var(--ink); font-family:"Space Grotesk",sans-serif; background: radial-gradient(circle at 14% 12%, rgba(239,193,79,.24), transparent 24%), radial-gradient(circle at 82% 18%, rgba(207,64,34,.12), transparent 22%), linear-gradient(180deg,#f5efdf 0%,#ebdfca 58%,#efe6d3 100%); scroll-snap-type:y proximity; }
     body::before { content:""; position:fixed; inset:0; pointer-events:none; background-image:linear-gradient(rgba(18,18,18,.045) 1px, transparent 1px),linear-gradient(90deg, rgba(18,18,18,.045) 1px, transparent 1px); background-size:88px 88px; opacity:.24; mask-image:linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,.5) 72%, transparent 100%); }
     body::after { content:""; position:fixed; inset:0; pointer-events:none; background:radial-gradient(circle at center, transparent 62%, rgba(0,0,0,.13) 100%); mix-blend-mode:multiply; opacity:.18; }
     a { color:inherit; text-decoration:none; }
     .wrap { width:min(1480px, calc(100vw - 24px)); margin:0 auto; padding:12px 0 64px; }
     .paper { position:relative; overflow:hidden; border:2px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.06)), var(--paper); box-shadow:0 24px 80px rgba(16,16,16,.16); }
     .paper::before { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(120deg, rgba(207,64,34,.06), transparent 20%), linear-gradient(300deg, rgba(239,193,79,.1), transparent 22%); }
+    .progress { position:fixed; top:50%; right:18px; z-index:50; display:grid; gap:10px; transform:translateY(-50%); }
+    .progress a { display:flex; align-items:center; justify-content:flex-end; gap:10px; color:#6e665a; font:600 10px/1 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; opacity:.48; transition:opacity .22s ease, color .22s ease, transform .22s ease; }
+    .progress a::after { content:""; width:42px; height:2px; background:currentColor; transform-origin:right center; transition:transform .22s ease; }
+    .progress a.active { color:var(--red); opacity:1; transform:translateX(-10px); }
+    .progress a.active::after { transform:scaleX(1.9); }
     .ticker { position:relative; z-index:2; display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); border-bottom:2px solid var(--line); background:rgba(255,255,255,.38); }
     .ticker div { padding:11px 13px; border-right:2px solid var(--line); font:600 10px/1.45 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; }
     .ticker div:last-child { border-right:none; }
@@ -1364,6 +1370,11 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     .cover-copy { position:relative; padding:26px 24px 18px; border-right:2px solid var(--line); display:grid; grid-template-rows:auto 1fr auto auto; }
     .cover-copy::before { content:"SATSMITH"; position:absolute; right:-18px; bottom:-22px; font:400 clamp(120px, 20vw, 260px)/.8 "Bebas Neue",sans-serif; letter-spacing:.02em; color:rgba(18,18,18,.07); pointer-events:none; }
     .cover-copy::after { content:""; position:absolute; right:18%; top:8%; width:min(34vw, 420px); height:min(24vw, 320px); background:linear-gradient(135deg, rgba(207,64,34,.2), rgba(239,193,79,.18)); transform:rotate(-10deg); mix-blend-mode:multiply; pointer-events:none; }
+    .cover-trace { position:absolute; inset:auto 4% 10% auto; width:min(54vw, 760px); height:min(48vh, 420px); pointer-events:none; opacity:.9; }
+    .cover-trace path { fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .cover-trace .trace-back { stroke:rgba(18,18,18,.08); stroke-width:10; }
+    .cover-trace .trace-front { stroke:rgba(207,64,34,.82); stroke-width:4; stroke-dasharray:1200; stroke-dashoffset:1200; animation:draw 2.6s cubic-bezier(.22,1,.36,1) .25s forwards; }
+    .cover-trace .trace-node { fill:var(--white); stroke:var(--line); stroke-width:2; }
     .eyebrow, .route-tag, .list-tag, .metric-label { display:inline-flex; align-items:center; justify-content:center; padding:7px 10px; border:1.5px solid currentColor; font:600 10px/1 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; }
     .eyebrow { width:max-content; color:var(--red); background:rgba(255,250,241,.7); }
     .stamp { display:inline-flex; align-items:center; justify-content:center; padding:10px 12px; background:var(--red); color:var(--white); font:600 10px/1 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; border:1.5px solid var(--red); }
@@ -1406,22 +1417,26 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     .tower-foot { margin:22px; padding:18px; background:linear-gradient(135deg, rgba(239,193,79,.18), rgba(207,64,34,.14)); border:1px solid rgba(255,255,255,.18); }
     .tower-foot strong { display:block; color:#fff1cc; font:600 10px/1.1 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; }
     .tower-foot p { margin-top:10px; font:600 30px/.96 "Newsreader",serif; color:#fff8ee; }
+    .scene, .cover, .closing { scroll-snap-align:start; }
     .scene { position:relative; z-index:1; border-top:2px solid var(--line); }
     .scene-head { display:grid; grid-template-columns:300px minmax(0, 1fr); }
     .scene-label { padding:22px 18px; border-right:2px solid var(--line); background:rgba(255,250,241,.28); }
     .scene-label p { margin-top:16px; color:var(--muted); font:500 15px/1.8 "Newsreader",serif; }
     .scene-body { min-width:0; }
     .bands { display:grid; }
-    .route-band { display:grid; grid-template-columns:minmax(0, 1.2fr) 180px 220px; align-items:end; gap:18px; min-height:140px; padding:20px 22px 18px; border-bottom:2px solid var(--line); }
+    .route-band { display:grid; grid-template-columns:minmax(0, 1.2fr) 180px 220px; align-items:end; gap:18px; min-height:140px; padding:20px 22px 18px; border-bottom:2px solid var(--line); transition:transform .7s cubic-bezier(.22,1,.36,1), opacity .55s ease, filter .55s ease; }
     .route-band:last-child { border-bottom:none; }
+    .route-band:nth-child(odd) { transform:translate3d(48px, 0, 0) rotate(-1.2deg); }
+    .route-band:nth-child(even) { transform:translate3d(-34px, 0, 0) rotate(.8deg); }
     .route-band.paper { background:var(--paper-soft); color:var(--ink); }
     .route-band.void { background:linear-gradient(180deg, var(--void), var(--void-soft)); color:var(--white); }
+    .route-band.is-visible { transform:translate3d(0,0,0) rotate(0); }
     .route-band .route-tag { width:max-content; }
     .route-band .route-meta { font:600 10px/1.4 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; color:inherit; opacity:.72; }
     .route-band .route-price { justify-self:end; font:400 32px/.92 "Bebas Neue",sans-serif; text-transform:uppercase; }
     .pressure { display:grid; grid-template-columns:minmax(0, 1fr) 360px; }
     .pressure-main { padding:0; border-right:2px solid var(--line); }
-    .pressure-main .feature { padding:26px 22px; border-bottom:2px solid var(--line); background:rgba(255,250,241,.38); }
+    .pressure-main .feature { padding:26px 22px; border-bottom:2px solid var(--line); background:rgba(255,250,241,.38); transition:transform .65s cubic-bezier(.22,1,.36,1), opacity .5s ease, filter .5s ease; }
     .pressure-main .feature:nth-child(2) { transform:translateX(34px); width:calc(100% - 34px); background:#f7f0e1; }
     .pressure-main .feature:nth-child(3) { width:calc(100% - 68px); background:#ede0c9; }
     .pressure-main .feature:last-child { border-bottom:none; }
@@ -1430,7 +1445,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     .pressure-rail { background:var(--void); color:var(--white); }
     .pressure-rail .rail-head { padding:22px; border-bottom:1px solid rgba(255,255,255,.14); }
     .pressure-rail .rail-head p { margin-top:12px; color:#d0c6b5; line-height:1.7; }
-    .watch-item { padding:18px 22px 20px; border-bottom:1px solid rgba(255,255,255,.14); }
+    .watch-item { padding:18px 22px 20px; border-bottom:1px solid rgba(255,255,255,.14); transition:transform .55s cubic-bezier(.22,1,.36,1), opacity .45s ease; }
     .watch-item:last-child { border-bottom:none; }
     .watch-item p { margin-top:10px; color:#c8bdab; line-height:1.7; }
     .watch-item .meta { color:var(--gold); }
@@ -1439,9 +1454,11 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     .prompt-intro h2 { max-width:280px; }
     .prompt-intro p { margin-top:16px; color:#413b33; font:500 16px/1.8 "Newsreader",serif; }
     .prompt-stack { display:grid; }
-    .prompt-card { display:grid; grid-template-columns:220px minmax(0, 1fr); gap:18px; padding:22px; border-bottom:2px solid var(--line); background:rgba(255,250,241,.38); }
+    .prompt-card { display:grid; grid-template-columns:220px minmax(0, 1fr); gap:18px; padding:22px; border-bottom:2px solid var(--line); background:rgba(255,250,241,.38); transition:transform .6s cubic-bezier(.22,1,.36,1), opacity .45s ease; }
     .prompt-card:nth-child(2) { background:#f7f0e2; }
     .prompt-card:nth-child(3) { background:#ece0ca; }
+    .prompt-card:nth-child(odd) { transform:rotate(-1deg); }
+    .prompt-card:nth-child(even) { transform:rotate(.8deg); }
     .prompt-card:last-child { border-bottom:none; }
     .prompt-side strong { display:block; font:600 10px/1.3 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; color:var(--red); }
     .prompt-side h3 { margin-top:10px; }
@@ -1456,7 +1473,8 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     .console p, .console .foot { margin-top:12px; color:#c2b7a7; line-height:1.75; }
     .discovery { padding:24px 22px; background:linear-gradient(180deg, #131313, #1a1a1a); }
     .discovery p { margin-top:12px; color:#cbbfad; line-height:1.75; }
-    .discovery a { display:block; margin-top:16px; padding:16px; border:1px solid rgba(255,255,255,.16); }
+    .discovery a { display:block; margin-top:16px; padding:16px; border:1px solid rgba(255,255,255,.16); transition:transform .4s ease, background .4s ease; }
+    .discovery a:hover { transform:translateX(10px); background:rgba(255,255,255,.04); }
     .discovery a strong { display:block; font:400 24px/.95 "Bebas Neue",sans-serif; }
     .discovery a span { display:block; margin-top:8px; color:#cbbfad; font-size:12px; line-height:1.6; }
     .closing { display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(320px, .9fr); border-top:2px solid var(--line); }
@@ -1466,16 +1484,27 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     .closing-call p { margin-top:14px; color:#ffe3d7; line-height:1.75; }
     .closing-call .action { margin-top:18px; border:1.5px solid rgba(255,255,255,.3); background:rgba(255,255,255,.1); color:var(--white); min-height:auto; }
     .closing-call .action strong { font-size:26px; }
-    .cover-top, .cover-copy > div, .tower, .feature, .watch-item, .prompt-card, .route-band, .console, .discovery a { animation: rise .7s ease both; }
+    .reveal { opacity:0; filter:blur(8px); }
+    .reveal.is-visible { opacity:1; filter:blur(0); }
+    .cover-top, .cover-copy > div, .tower, .console, .discovery a { animation: rise .7s ease both; }
     .cover-copy > div:nth-child(2) { animation-delay:.08s; }
     .cover-copy > div:nth-child(3) { animation-delay:.14s; }
     .tower { animation-delay:.18s; }
     @keyframes rise { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes draw { to { stroke-dashoffset:0; } }
     @media (max-width:1240px){ .ticker, .stats-strip, .action-row, .issue-note { grid-template-columns:repeat(2, minmax(0, 1fr)); } .cover, .scene-head, .pressure, .prompts, .machine, .closing { grid-template-columns:1fr; } .cover-copy, .scene-label, .pressure-main, .prompt-intro, .console-wrap, .closing-copy { border-right:none; border-bottom:2px solid var(--line); } .prompt-card { grid-template-columns:1fr; } .route-band { grid-template-columns:1fr; } .route-band .route-price { justify-self:start; } .pressure-main .feature:nth-child(2), .pressure-main .feature:nth-child(3) { transform:none; width:100%; } .console-grid { grid-template-columns:1fr; } .console { border-right:none; } }
-    @media (max-width:760px){ .wrap { width:min(100vw - 12px, 1480px); padding:8px 0 36px; } .ticker, .stats-strip, .action-row, .issue-note, .tower-links { grid-template-columns:1fr; } .ticker div, .metric, .action, .issue-note span, .tower-links a { border-right:none; } .cover-copy, .prompt-intro, .closing-copy, .closing-call, .tower > *, .scene-label, .console-head, .discovery { padding-left:18px; padding-right:18px; } h1 { font-size:clamp(76px, 27vw, 160px); } .cover-copy::before { right:-10px; bottom:10px; font-size:clamp(82px, 28vw, 180px); } .cover-top { display:block; } .stamp { margin-top:12px; } .cover-copy::after { width:58vw; height:38vw; right:6%; top:10%; } }
+    @media (max-width:900px){ .progress { display:none; } }
+    @media (max-width:760px){ .wrap { width:min(100vw - 12px, 1480px); padding:8px 0 36px; } .ticker, .stats-strip, .action-row, .issue-note, .tower-links { grid-template-columns:1fr; } .ticker div, .metric, .action, .issue-note span, .tower-links a { border-right:none; } .cover-copy, .prompt-intro, .closing-copy, .closing-call, .tower > *, .scene-label, .console-head, .discovery { padding-left:18px; padding-right:18px; } h1 { font-size:clamp(76px, 27vw, 160px); } .cover-copy::before { right:-10px; bottom:10px; font-size:clamp(82px, 28vw, 180px); } .cover-top { display:block; } .stamp { margin-top:12px; } .cover-copy::after { width:58vw; height:38vw; right:6%; top:10%; } .cover-trace { width:74vw; height:32vh; top:auto; bottom:16%; right:4%; } }
   </style>
 </head>
 <body>
+  <nav class="progress" aria-label="Page progress">
+    <a href="#cover" data-target="cover" class="active">Cover</a>
+    <a href="#routes" data-target="routes">Routes</a>
+    <a href="#pressure" data-target="pressure">Pressure</a>
+    <a href="#buyer" data-target="buyer">Buyer</a>
+    <a href="#machine" data-target="machine">Machine</a>
+  </nav>
   <div class="wrap">
     <div class="paper">
       <div class="ticker">
@@ -1485,8 +1514,15 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
         <div><strong>Read mode</strong><br>editorial front / technical spine</div>
       </div>
 
-      <section class="cover">
+      <section class="cover" id="cover" data-scene="cover">
         <article class="cover-copy">
+          <svg class="cover-trace" viewBox="0 0 780 420" aria-hidden="true">
+            <path class="trace-back" d="M24 324C140 316 160 184 274 184C362 184 392 254 466 254C580 254 596 82 744 78" />
+            <path class="trace-front" d="M24 324C140 316 160 184 274 184C362 184 392 254 466 254C580 254 596 82 744 78" />
+            <circle class="trace-node" cx="274" cy="184" r="11" />
+            <circle class="trace-node" cx="466" cy="254" r="11" />
+            <circle class="trace-node" cx="744" cy="78" r="11" />
+          </svg>
           <div class="cover-top">
             <div>
               <div class="eyebrow">AIBTC operator gazette</div>
@@ -1528,19 +1564,19 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
           </div>
           <div class="subdeck">This right rail is the technical tower. It compresses the first three buyer questions into routes that can be used immediately.</div>
           <div class="tower-stack">
-            <article class="tower-card">
+            <article class="tower-card reveal">
               <strong>Trust desk</strong>
               <h3>Check the counterparty before you trust the narrative.</h3>
               <p>Run due diligence on a repo, agent, or project surface before you spend attention on it.</p>
               <code>/api/counterparty</code>
             </article>
-            <article class="tower-card">
+            <article class="tower-card reveal">
               <strong>Failure desk</strong>
               <h3>Debug auth flow before it becomes a help thread.</h3>
               <p>Trace signatures, check-ins, inbox flow, and registration mismatches from one route.</p>
               <code>/api/auth-debug</code>
             </article>
-            <article class="tower-card">
+            <article class="tower-card reveal">
               <strong>Escalation desk</strong>
               <h3>Escalate only when ranked output earns the right to charge.</h3>
               <p>Move into fit and service mapping through x402 when the free answer is no longer enough.</p>
@@ -1558,7 +1594,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
         </aside>
       </section>
 
-      <section class="scene">
+      <section class="scene" id="routes" data-scene="routes">
         <div class="scene-head">
           <div class="scene-label">
             <div class="list-tag">Route ladder</div>
@@ -1568,7 +1604,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
           <div class="scene-body">
             <div class="bands">
               ${routeBands.map((product) => `
-                <article class="route-band ${product.tone}">
+                <article class="route-band ${product.tone} reveal">
                   <div>
                     <div class="route-tag">${escapeHtml(product.tag)}</div>
                     <h3>${escapeHtml(product.name)}</h3>
@@ -1584,7 +1620,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
         </div>
       </section>
 
-      <section class="scene">
+      <section class="scene" id="pressure" data-scene="pressure">
         <div class="scene-head">
           <div class="scene-label">
             <div class="list-tag">Pressure map</div>
@@ -1595,7 +1631,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
             <div class="pressure">
               <div class="pressure-main">
                 ${top.map((project) => `
-                  <article class="feature">
+                  <article class="feature reveal">
                     <div class="route-tag">Project target</div>
                     <h3>${escapeHtml(project.title)}</h3>
                     <p>${escapeHtml(project.reason)} ${escapeHtml(project.firstMove)}</p>
@@ -1610,7 +1646,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
                   <p>The right rail is intentionally darker and tighter. It should feel like a field notebook tracking the builders worth watching.</p>
                 </div>
                 ${watch.map((entry) => `
-                  <article class="watch-item">
+                  <article class="watch-item reveal">
                     <h3>${escapeHtml(entry.displayName)}</h3>
                     <p>${escapeHtml(entry.description)}</p>
                     <div class="meta"><span>leaderboard ${entry.score}</span></div>
@@ -1622,7 +1658,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
         </div>
       </section>
 
-      <section class="scene">
+      <section class="scene" id="buyer" data-scene="buyer">
         <div class="scene-head">
           <div class="scene-label">
             <div class="list-tag">Buyer desk</div>
@@ -1638,7 +1674,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
               </div>
               <div class="prompt-stack">
                 ${buyerPrompts.map((item) => `
-                  <article class="prompt-card">
+                  <article class="prompt-card reveal">
                     <div class="prompt-side">
                       <strong>Best-fit request</strong>
                       <h3>${escapeHtml(item.title)}</h3>
@@ -1655,7 +1691,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
         </div>
       </section>
 
-      <section class="scene">
+      <section class="scene" id="machine" data-scene="machine">
         <div class="scene-head">
           <div class="scene-label">
             <div class="list-tag">Machine layer</div>
@@ -1745,6 +1781,55 @@ GET ${serviceBase}/openapi.json</pre>
       </section>
     </div>
   </div>
+  <script>
+    (() => {
+      const scenes = Array.from(document.querySelectorAll("[data-scene]"));
+      const progressLinks = Array.from(document.querySelectorAll(".progress a"));
+      const revealNodes = Array.from(document.querySelectorAll(".reveal"));
+      const cover = document.querySelector(".cover-copy");
+
+      const markScene = (name) => {
+        document.body.dataset.scene = name;
+        progressLinks.forEach((link) => link.classList.toggle("active", link.dataset.target === name));
+      };
+
+      const sceneObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            markScene(entry.target.dataset.scene || "");
+          }
+        });
+      }, { threshold: 0.55 });
+
+      scenes.forEach((scene) => sceneObserver.observe(scene));
+
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+          }
+        });
+      }, { threshold: 0.18 });
+
+      revealNodes.forEach((node, index) => {
+        node.style.transitionDelay = String(Math.min(index * 40, 220)) + "ms";
+        revealObserver.observe(node);
+      });
+
+      if (cover) {
+        window.addEventListener("pointermove", (event) => {
+          const rect = cover.getBoundingClientRect();
+          const dx = ((event.clientX - rect.left) / rect.width) - 0.5;
+          const dy = ((event.clientY - rect.top) / rect.height) - 0.5;
+          cover.style.setProperty("transform", "translate3d(" + (dx * -12) + "px, " + (dy * -8) + "px, 0)");
+        }, { passive: true });
+
+        window.addEventListener("pointerleave", () => {
+          cover.style.removeProperty("transform");
+        }, { passive: true });
+      }
+    })();
+  </script>
 </body>
 </html>`;
 }
