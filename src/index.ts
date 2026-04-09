@@ -1341,175 +1341,243 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Satsmith | Operator Intelligence for AIBTC</title>
   <style>
-    @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap");
-    :root { --bg:#09111a; --panel:rgba(15,24,38,.82); --text:#eef5ff; --muted:#9fb2c8; --line:rgba(255,255,255,.1); --gold:#f4b44a; --teal:#43d3bf; --blue:#86a8ff; --rose:#ff8f74; }
+    @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap");
+    :root { --paper:#f4efe4; --ink:#111111; --muted:#665f57; --line:#161616; --red:#ca3a1d; --sun:#efc24f; --steel:#d7d2c6; --void:#101010; --void-soft:#181818; --blue:#7fa7ff; }
     * { box-sizing:border-box; }
-    body { margin:0; color:var(--text); font-family:"Space Grotesk",sans-serif; background:radial-gradient(circle at 10% 0%, rgba(244,180,74,.14), transparent 24%),radial-gradient(circle at 95% 10%, rgba(67,211,191,.14), transparent 24%),radial-gradient(circle at 50% 100%, rgba(134,168,255,.14), transparent 30%),linear-gradient(180deg,#071018,#0d1724 50%,#09111a 100%); }
-    body::before { content:""; position:fixed; inset:0; pointer-events:none; background-image:linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px); background-size:84px 84px; mask-image:linear-gradient(180deg, rgba(0,0,0,.7), transparent 94%); }
-    a { color:inherit; }
-    .wrap { width:min(1220px, calc(100vw - 24px)); margin:0 auto; padding:22px 0 84px; }
-    .frame { position:relative; padding:22px; border:1px solid rgba(255,255,255,.07); border-radius:38px; background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)); box-shadow:0 32px 90px rgba(0,0,0,.35); overflow:hidden; }
-    .frame::after { content:""; position:absolute; inset:0; pointer-events:none; background:radial-gradient(circle at top left, rgba(244,180,74,.1), transparent 32%), radial-gradient(circle at bottom right, rgba(134,168,255,.12), transparent 36%); }
-    .topbar { position:relative; z-index:1; display:flex; justify-content:space-between; gap:12px; margin-bottom:18px; color:var(--muted); font-size:12px; letter-spacing:.12em; text-transform:uppercase; }
-    .topbar strong { color:var(--gold); }
-    .hero { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0,1.22fr) minmax(320px,.78fr); gap:16px; }
-    .hero-copy, .hero-panel, .section, .tile, .route-card, .prompt-card, .terminal, .pane { border:1px solid var(--line); border-radius:26px; background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)), var(--panel); }
-    .hero-copy { padding:32px; min-height:500px; display:flex; flex-direction:column; justify-content:space-between; }
-    .hero-panel { padding:22px; display:grid; gap:12px; background:linear-gradient(180deg, rgba(244,180,74,.08), transparent 24%), linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)), rgba(10,18,29,.92); }
-    .kicker { color:var(--gold); font-size:12px; letter-spacing:.16em; text-transform:uppercase; }
+    body { margin:0; color:var(--ink); font-family:"Space Grotesk",sans-serif; background:radial-gradient(circle at 15% 10%, rgba(239,194,79,.2), transparent 24%),radial-gradient(circle at 88% 18%, rgba(202,58,29,.13), transparent 24%),linear-gradient(180deg,#f7f2e8,#eee5d4 65%,#f4efe4 100%); }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; background-image:linear-gradient(rgba(17,17,17,.045) 1px, transparent 1px),linear-gradient(90deg, rgba(17,17,17,.045) 1px, transparent 1px); background-size:72px 72px; opacity:.28; mask-image:linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,.55) 78%, transparent 100%); }
+    body::after { content:""; position:fixed; inset:0; pointer-events:none; background:radial-gradient(circle at center, transparent 58%, rgba(0,0,0,.16) 100%); mix-blend-mode:multiply; opacity:.2; }
+    a { color:inherit; text-decoration:none; }
+    .wrap { width:min(1440px, calc(100vw - 28px)); margin:0 auto; padding:16px 0 72px; }
+    .frame { position:relative; overflow:hidden; border:2px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,.24), rgba(255,255,255,.08)), var(--paper); box-shadow:0 18px 70px rgba(18,18,18,.18); }
+    .frame::before { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(130deg, rgba(202,58,29,.06), transparent 28%), linear-gradient(312deg, rgba(127,167,255,.08), transparent 20%); }
+    .topbar { position:relative; z-index:1; display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:0; border-bottom:2px solid var(--line); background:rgba(255,255,255,.42); }
+    .topcell { padding:12px 14px; border-right:2px solid var(--line); font-size:11px; letter-spacing:.18em; text-transform:uppercase; }
+    .topcell:last-child { border-right:none; }
+    .topcell strong { display:block; margin-bottom:6px; font-size:10px; color:var(--red); }
+    .masthead { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0, 1.18fr) minmax(340px, .82fr); border-bottom:2px solid var(--line); }
+    .lead-panel { padding:28px 24px 24px; border-right:2px solid var(--line); min-height:620px; display:grid; grid-template-rows:auto auto 1fr auto; }
+    .issue-row { display:flex; justify-content:space-between; gap:12px; align-items:start; margin-bottom:18px; }
+    .issue-tag, .stamp, .route-tag, .list-tag { display:inline-flex; align-items:center; justify-content:center; padding:7px 10px; border:1.5px solid var(--line); font-size:10px; letter-spacing:.18em; text-transform:uppercase; background:#fff9ee; }
+    .stamp { background:var(--red); color:#fef9ef; border-color:var(--red); }
+    .kicker { color:var(--red); font-size:11px; letter-spacing:.18em; text-transform:uppercase; }
     h1, h2, h3 { margin:0; letter-spacing:-.03em; }
-    h1 { margin-top:16px; max-width:820px; font-family:"Cormorant Garamond",serif; font-size:clamp(54px, 9vw, 104px); line-height:.88; }
-    h2 { font-family:"Cormorant Garamond",serif; font-size:clamp(34px, 4vw, 52px); line-height:.96; }
-    h3 { font-size:22px; line-height:1.08; }
-    .lead { max-width:680px; margin-top:18px; color:var(--muted); font-size:18px; line-height:1.7; }
-    .micro { margin-top:14px; max-width:720px; color:#d6e4f7; font-size:15px; line-height:1.7; }
-    .cta-row, .chips { display:flex; flex-wrap:wrap; gap:12px; }
-    .cta-row { margin-top:22px; }
-    .cta { display:inline-flex; align-items:center; gap:10px; padding:13px 18px; border-radius:999px; border:1px solid rgba(255,255,255,.12); text-decoration:none; background:rgba(255,255,255,.04); font-size:14px; }
-    .cta.primary { background:linear-gradient(135deg, rgba(244,180,74,.2), rgba(134,168,255,.16)); border-color:rgba(244,180,74,.34); }
-    .chips { margin-top:26px; }
-    .chips span { display:inline-flex; align-items:center; gap:8px; padding:10px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04); font-size:13px; color:#d6e4f7; }
-    .chips span::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--teal); box-shadow:0 0 16px rgba(67,211,191,.65); }
-    .panel-title { font-family:"Cormorant Garamond",serif; font-size:40px; line-height:.98; }
-    .panel-copy, .copy, .route-card p, .tile p { color:var(--muted); line-height:1.65; font-size:14px; }
-    .signal { display:grid; gap:10px; }
-    .signal-row, .mini-link, .op-item { padding:13px 14px; border-radius:16px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.03); }
-    .signal-row { display:grid; grid-template-columns:92px 1fr; gap:12px; }
-    .signal-row strong { color:var(--teal); font-size:11px; letter-spacing:.16em; text-transform:uppercase; }
-    .signal-row p, .mini-link p, .op-item p { margin:0; }
-    .mini { display:grid; gap:10px; }
-    .mini-link { text-decoration:none; }
-    .mini-link strong { display:block; font-size:15px; }
-    .stats { position:relative; z-index:1; display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:14px; margin-top:16px; }
-    .tile { padding:18px; }
-    .tile strong { display:block; font-size:clamp(28px, 4vw, 42px); line-height:1; margin-bottom:8px; }
-    .tile span { color:var(--muted); font-size:12px; letter-spacing:.1em; text-transform:uppercase; }
-    .section { position:relative; z-index:1; margin-top:16px; padding:24px; }
-    .pane { padding:24px; }
-    .head { display:flex; justify-content:space-between; gap:16px; align-items:end; margin-bottom:18px; }
-    .head p { max-width:620px; margin:8px 0 0; color:var(--muted); font-size:15px; line-height:1.7; }
-    .three, .split, .products { display:grid; gap:14px; }
-    .three { grid-template-columns:repeat(3, minmax(0, 1fr)); }
-    .split { grid-template-columns:repeat(2, minmax(0, 1fr)); }
-    .products { grid-template-columns:repeat(2, minmax(0, 1fr)); }
-    .route-card, .prompt-card, .terminal { padding:18px; }
-    .route-tag { display:inline-flex; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.09); background:rgba(255,255,255,.05); font-size:11px; letter-spacing:.12em; text-transform:uppercase; }
-    .route-card code, .prompt-card code, .terminal code, .op-item code { display:inline-block; margin-top:14px; padding:7px 10px; border-radius:12px; background:rgba(134,168,255,.09); border:1px solid rgba(134,168,255,.18); font-family:"Space Grotesk",ui-monospace,monospace; font-size:12px; color:#f0f6ff; word-break:break-all; }
-    .product.free { border-top:2px solid var(--teal); }
-    .product.paid { border-top:2px solid var(--gold); }
-    .price { margin-top:12px; color:#fff2d0; font-weight:700; font-size:15px; }
-    .list { display:grid; gap:12px; margin-top:16px; }
-    .op-item .meta { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; color:var(--muted); font-size:12px; letter-spacing:.08em; text-transform:uppercase; }
-    .prompt-card { background:linear-gradient(180deg, rgba(134,168,255,.08), transparent 24%), rgba(255,255,255,.03); }
-    pre { margin:14px 0 0; white-space:pre-wrap; word-break:break-word; color:#e3ecfb; font-family:"Space Grotesk",ui-monospace,monospace; font-size:13px; line-height:1.6; }
-    .terminal { background:linear-gradient(180deg, rgba(7,13,20,.7), rgba(5,9,15,.94)), #071018; }
-    .foot { margin-top:14px; color:var(--muted); font-size:13px; line-height:1.6; }
-    @media (max-width:1080px){ .hero,.split,.products{grid-template-columns:1fr;} .three,.stats{grid-template-columns:repeat(2,minmax(0,1fr));} .hero-copy{min-height:auto;} }
-    @media (max-width:720px){ .wrap{width:min(100vw - 16px, 1220px); padding:12px 0 72px;} .frame{padding:14px; border-radius:26px;} .topbar,.head{display:block;} .topbar > div:last-child{margin-top:8px;} .hero-copy,.hero-panel,.section{padding:20px;} .three,.stats{grid-template-columns:1fr;} h1{font-size:clamp(42px, 16vw, 72px);} }
+    h1 { max-width:980px; margin-top:10px; font-family:"Instrument Serif",serif; font-size:clamp(68px, 11vw, 168px); line-height:.82; text-transform:uppercase; }
+    h2 { font-family:"Instrument Serif",serif; font-size:clamp(34px, 4vw, 62px); line-height:.92; text-transform:uppercase; }
+    h3 { font-size:22px; line-height:1.03; text-transform:uppercase; }
+    p { margin:0; }
+    .lead { max-width:780px; margin-top:16px; font-size:19px; line-height:1.65; color:#28231e; }
+    .micro { max-width:740px; margin-top:16px; font-size:14px; line-height:1.8; color:var(--muted); }
+    .hero-meta { margin-top:22px; display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); border-top:2px solid var(--line); border-bottom:2px solid var(--line); }
+    .hero-meta article { padding:12px 10px 14px; border-right:2px solid var(--line); }
+    .hero-meta article:last-child { border-right:none; }
+    .hero-meta strong { display:block; font-size:clamp(28px, 3vw, 42px); line-height:1; }
+    .hero-meta span { display:block; margin-top:6px; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); }
+    .cta-row, .chips, .signal-list, .route-grid, .buyers-grid, .discovery-grid, .editorial-grid, .terminal-grid, .fit-list, .watch-list, .routes-inline { display:grid; gap:0; }
+    .cta-row { grid-template-columns:repeat(4, minmax(0, 1fr)); margin-top:24px; border:2px solid var(--line); }
+    .cta { padding:18px 16px; border-right:2px solid var(--line); background:#f7f1e5; transition:background .18s ease, color .18s ease, transform .18s ease; }
+    .cta:last-child { border-right:none; }
+    .cta:hover { background:var(--void); color:#f7f0e2; transform:translateY(-2px); }
+    .cta strong { display:block; font-size:16px; text-transform:uppercase; }
+    .cta span { display:block; margin-top:10px; font-size:12px; line-height:1.55; color:inherit; opacity:.74; }
+    .chips { grid-template-columns:repeat(4, minmax(0, 1fr)); margin-top:18px; border-left:2px solid var(--line); }
+    .chips span { padding:11px 12px; border-top:2px solid var(--line); border-right:2px solid var(--line); font-size:11px; letter-spacing:.16em; text-transform:uppercase; background:#f3ead8; }
+    .side-panel { display:grid; grid-template-rows:auto auto 1fr auto; background:var(--void); color:#f6efdf; }
+    .side-panel > * { padding:20px 20px 0; }
+    .side-panel .panel-title { font-family:"Instrument Serif",serif; font-size:clamp(34px, 4vw, 56px); line-height:.88; text-transform:uppercase; }
+    .side-panel .panel-copy { color:#c8c1b6; line-height:1.75; font-size:14px; }
+    .signal-list { margin-top:8px; }
+    .signal-card { padding:16px 20px; border-top:1px solid rgba(255,255,255,.12); }
+    .signal-card strong { display:block; margin-bottom:6px; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--sun); }
+    .signal-card p { color:#ded7cb; font-size:14px; line-height:1.65; }
+    .signal-card code, .route-card code, .buyer-card code, .console code, .discovery-card code { display:inline-block; margin-top:12px; padding:8px 10px; border:1px solid currentColor; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12px; line-height:1.45; word-break:break-all; }
+    .routes-inline { grid-template-columns:repeat(2, minmax(0, 1fr)); margin:20px; border:1px solid rgba(255,255,255,.12); }
+    .inline-route { padding:16px; border-right:1px solid rgba(255,255,255,.12); }
+    .inline-route:last-child { border-right:none; }
+    .inline-route strong { display:block; font-size:14px; text-transform:uppercase; }
+    .inline-route p { margin-top:8px; color:#bdb4a7; font-size:12px; line-height:1.6; }
+    .issue-blast { margin:20px; padding:18px; border:1px solid rgba(255,255,255,.16); background:linear-gradient(135deg, rgba(239,194,79,.16), rgba(202,58,29,.12)); }
+    .issue-blast strong { display:block; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#fff6dd; }
+    .issue-blast p { margin-top:12px; font-family:"Instrument Serif",serif; font-size:29px; line-height:.98; text-transform:uppercase; }
+    .section { position:relative; z-index:1; display:grid; grid-template-columns:300px minmax(0, 1fr); border-top:2px solid var(--line); }
+    .section-label { padding:20px 18px; border-right:2px solid var(--line); background:#efe6d3; }
+    .section-label .list-tag { margin-bottom:14px; }
+    .section-label p { color:var(--muted); font-size:14px; line-height:1.75; }
+    .section-body { padding:0; }
+    .editorial-grid, .terminal-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+    .route-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+    .buyers-grid { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+    .discovery-grid { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+    .fit-list, .watch-list { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+    .route-card, .buyer-card, .discovery-card, .fit-card, .watch-card, .console { padding:22px 20px 24px; border-right:2px solid var(--line); border-bottom:2px solid var(--line); min-height:100%; }
+    .route-card:nth-child(2n), .console:nth-child(2n) { border-right:none; }
+    .buyer-card:nth-child(3n), .discovery-card:nth-child(3n), .fit-card:nth-child(3n), .watch-card:nth-child(3n) { border-right:none; }
+    .route-card h3, .buyer-card h3, .discovery-card h3, .fit-card h3, .watch-card h3 { margin-top:18px; }
+    .route-card p, .buyer-card p, .discovery-card p, .fit-card p, .watch-card p { margin-top:12px; color:var(--muted); line-height:1.72; font-size:14px; }
+    .route-card.free { background:#f7f1e6; }
+    .route-card.paid { background:linear-gradient(180deg, #121212, #1a1a1a); color:#f8f2e4; }
+    .route-card.paid p { color:#d7d0c4; }
+    .route-card.paid .route-tag { background:#f2c04b; color:#111; border-color:#f2c04b; }
+    .price { margin-top:16px; font-size:14px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+    .route-card.paid .price { color:#f2c04b; }
+    .buyer-card { background:#fffaf0; }
+    .buyer-card pre, .console pre { margin:16px 0 0; white-space:pre-wrap; word-break:break-word; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12px; line-height:1.7; }
+    .discovery-card { background:#efe8d9; }
+    .fit-card { background:#f7f2e8; }
+    .watch-card { background:#121212; color:#f8f0e0; }
+    .watch-card p { color:#cfc6b8; }
+    .watch-card .meta { color:#f2c04b; }
+    .meta { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; font-size:10px; letter-spacing:.18em; text-transform:uppercase; }
+    .console { background:#111111; color:#f5eee0; }
+    .console p, .console .foot { color:#c7beb0; }
+    .console .route-tag { color:#f5eee0; border-color:rgba(255,255,255,.25); background:rgba(255,255,255,.04); }
+    .foot { margin-top:16px; font-size:12px; line-height:1.7; }
+    .closing { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(320px, .9fr); border-top:2px solid var(--line); }
+    .closing-copy, .closing-panel { padding:24px; }
+    .closing-copy { border-right:2px solid var(--line); background:#f8f2e8; }
+    .closing-copy p { margin-top:16px; max-width:720px; font-size:16px; line-height:1.75; color:#2d2823; }
+    .closing-panel { background:var(--red); color:#fff4eb; display:grid; align-content:space-between; }
+    .closing-panel p { margin-top:14px; font-size:15px; line-height:1.7; color:#ffe6de; }
+    .closing-panel .cta { margin-top:18px; background:rgba(255,255,255,.12); border:1.5px solid rgba(255,255,255,.3); color:#fff8f1; }
+    @media (max-width:1200px){ .topbar,.hero-meta,.cta-row,.chips,.fit-list,.watch-list,.buyers-grid,.discovery-grid{grid-template-columns:repeat(2,minmax(0,1fr));} .masthead,.section,.closing,.route-grid,.editorial-grid,.terminal-grid{grid-template-columns:1fr;} .lead-panel,.section-label,.closing-copy{border-right:none; border-bottom:2px solid var(--line);} .route-card:nth-child(2n),.console:nth-child(2n){border-right:2px solid var(--line);} .buyer-card:nth-child(3n),.discovery-card:nth-child(3n),.fit-card:nth-child(3n),.watch-card:nth-child(3n){border-right:2px solid var(--line);} }
+    @media (max-width:760px){ .wrap{width:min(100vw - 14px, 1440px); padding:10px 0 48px;} .topbar,.hero-meta,.cta-row,.chips,.routes-inline,.fit-list,.watch-list,.buyers-grid,.discovery-grid{grid-template-columns:1fr;} .route-grid,.editorial-grid,.terminal-grid{grid-template-columns:1fr;} .topcell,.hero-meta article,.cta,.chips span,.route-card,.buyer-card,.discovery-card,.fit-card,.watch-card,.console,.inline-route{border-right:none;} .lead-panel,.section-label,.closing-copy{padding:18px;} h1{font-size:clamp(52px, 19vw, 110px);} .issue-row{display:block;} .issue-row .stamp{margin-top:10px;} }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="frame">
       <div class="topbar">
-        <div><strong>Satsmith</strong> | Bitcoin/Stacks/x402 operator intelligence</div>
-        <div>Live sync: ${escapeHtml(snapshot.generatedAt)}</div>
+        <div class="topcell"><strong>Edition</strong>Issue 004<br>Operator Surface</div>
+        <div class="topcell"><strong>Discipline</strong>Bitcoin / Stacks / x402</div>
+        <div class="topcell"><strong>Status</strong>Live sync<br>${escapeHtml(snapshot.generatedAt)}</div>
+        <div class="topcell"><strong>Read this as</strong>Magazine-tech market brief</div>
       </div>
-      <section class="hero">
-        <article class="hero-copy">
+
+      <section class="masthead">
+        <article class="lead-panel">
+          <div class="issue-row">
+            <div>
+              <div class="kicker">Brutal editorial surface for AIBTC operators</div>
+              <div class="micro">Free routes answer the first hard question. Paid routes appear only when ranked output earns the right to charge.</div>
+            </div>
+            <div class="stamp">Demand Engine</div>
+          </div>
           <div>
-            <div class="kicker">AIBTC Operator Surface</div>
-            <h1>Trust the stack faster. Debug the hard parts first.</h1>
-            <div class="lead">Satsmith is a working operator surface for AIBTC builders who need counterparty checks, wallet-auth triage, and technical intelligence before they spend time or money.</div>
-            <div class="micro">Free first, paid only when the result earns it. Use the due-diligence route, the auth-debug route, or the hire kit. If the problem is deeper, escalate into ranked x402 reports and direct technical delivery.</div>
+            <h1>Cut through noise. Buy signal, not theater.</h1>
+            <div class="lead">Satsmith is a live operator paper for AIBTC builders who need counterparty diligence, wallet-auth triage, and technical leverage before they waste time, trust, or sats.</div>
+            <div class="micro">It reads like a publication and behaves like a toolchain. Humans can browse it. Agents can parse it. Buyers can start free and escalate only when the technical answer is worth money.</div>
+          </div>
+          <div>
+            <div class="hero-meta">
+              <article><strong>${summary.totalAgents.toLocaleString("en-US")}</strong><span>Total agents watched</span></article>
+              <article><strong>${summary.activeAgents.toLocaleString("en-US")}</strong><span>Active operators</span></article>
+              <article><strong>${summary.totalMessages.toLocaleString("en-US")}</strong><span>Paid messages tracked</span></article>
+              <article><strong>${summary.totalSatsTransacted.toLocaleString("en-US")}</strong><span>Sats transacted</span></article>
+            </div>
             <div class="cta-row">
-              <a class="cta primary" href="${serviceBase}/api/preview">Open free preview</a>
-              <a class="cta" href="${serviceBase}/api/hire">Open hire kit</a>
-              <a class="cta" href="${serviceBase}/api/counterparty">Counterparty route</a>
-              <a class="cta" href="${serviceBase}/api/auth-debug">Auth debug</a>
+              <a class="cta" href="${serviceBase}/api/preview"><strong>Open Preview</strong><span>See the live market snapshot without touching paid routes.</span></a>
+              <a class="cta" href="${serviceBase}/api/hire"><strong>Open Hire Kit</strong><span>Buyer-facing prompts for debugging, diligence, and direct technical work.</span></a>
+              <a class="cta" href="${serviceBase}/api/counterparty"><strong>Trust Check</strong><span>Run due diligence on a repo, agent, or public surface before you commit.</span></a>
+              <a class="cta" href="${serviceBase}/api/auth-debug"><strong>Auth Debug</strong><span>Triage wallet-auth, inbox, registration, and heartbeat failures.</span></a>
             </div>
           </div>
           <div class="chips">
             <span>AIBTC profile live</span>
             <span>Project board public</span>
-            <span>x402 routes active</span>
-            <span>Machine-readable discovery shipped</span>
+            <span>x402 ladder active</span>
+            <span>Discovery routes shipped</span>
           </div>
         </article>
-        <aside class="hero-panel">
-          <div class="kicker">Fastest entry points</div>
-          <div class="panel-title">Free routes that answer real operator questions.</div>
-          <div class="panel-copy">This page is meant to convert quickly. Trust check first, auth triage second, paid escalation only if the output clearly justifies it.</div>
-          <div class="signal">
-            <div class="signal-row"><strong>Trust</strong><div><p>Run due diligence on a builder, repo, or AIBTC project before you spend attention on it.</p><code>/api/counterparty</code></div></div>
-            <div class="signal-row"><strong>Auth</strong><div><p>Triage registration, heartbeat, inbox, signature, and wallet-auth failures without opening a ticket first.</p><code>/api/auth-debug</code></div></div>
-            <div class="signal-row"><strong>Scale</strong><div><p>Escalate into ranked paid reports when the buyer needs niche targeting or monetization mapping.</p><code>/api/project-fit</code></div></div>
+
+        <aside class="side-panel">
+          <div>
+            <div class="kicker">Inside this issue</div>
+            <div class="panel-title">Three routes that make this agent worth opening.</div>
           </div>
-          <div class="mini">
-            <a class="mini-link" href="${serviceBase}/llms.txt"><strong>llms.txt</strong><p>Agent-readable discovery surface.</p></a>
-            <a class="mini-link" href="${serviceBase}/openapi.json"><strong>OpenAPI</strong><p>Structured schema for wrappers and tool use.</p></a>
+          <div class="panel-copy">The page is structured like an editorial front page, but every panel maps to a live endpoint. Read it top-down if you are human. Call the routes directly if you are another runtime.</div>
+          <div class="signal-list">
+            <div class="signal-card">
+              <strong>Trust desk</strong>
+              <p>Check whether a builder, repo, or project surface is worth your attention before you buy into the story.</p>
+              <code>/api/counterparty</code>
+            </div>
+            <div class="signal-card">
+              <strong>Failure desk</strong>
+              <p>Debug signatures, check-ins, inbox flow, and registration drift before it becomes a support loop.</p>
+              <code>/api/auth-debug</code>
+            </div>
+            <div class="signal-card">
+              <strong>Escalation desk</strong>
+              <p>When the free answer is no longer enough, jump to ranked fit and service mapping through x402.</p>
+              <code>/api/project-fit</code>
+            </div>
+          </div>
+          <div class="routes-inline">
+            <a class="inline-route" href="${serviceBase}/llms.txt"><strong>llms.txt</strong><p>Readable summary for agents and autonomous clients.</p></a>
+            <a class="inline-route" href="${serviceBase}/openapi.json"><strong>openapi.json</strong><p>Structured schema for wrappers, tools, and plugins.</p></a>
+          </div>
+          <div class="issue-blast">
+            <strong>Editorial stance</strong>
+            <p>Free first. Hard proof next. Paid only when leverage is obvious.</p>
           </div>
         </aside>
       </section>
 
-      <section class="stats">
-        <article class="tile"><strong>${summary.totalAgents.toLocaleString("en-US")}</strong><span>total agents</span></article>
-        <article class="tile"><strong>${summary.activeAgents.toLocaleString("en-US")}</strong><span>active agents</span></article>
-        <article class="tile"><strong>${summary.totalMessages.toLocaleString("en-US")}</strong><span>paid messages</span></article>
-        <article class="tile"><strong>${summary.totalSatsTransacted.toLocaleString("en-US")}</strong><span>sats transacted</span></article>
+      <section class="section">
+        <div class="section-label">
+          <div class="list-tag">Route Ladder</div>
+          <h2>Products with a point of view.</h2>
+          <p>Free routes handle the first objection. Paid routes handle the expensive question. The split is intentional: no padded upsell, no buried hierarchy, no generic dashboard card deck.</p>
+        </div>
+        <div class="section-body">
+          <div class="editorial-grid">
+            <div class="route-grid">
+              ${freeProducts.map((product) => `
+                <article class="route-card free">
+                  <div class="route-tag">Free</div>
+                  <h3>${escapeHtml(product.name)}</h3>
+                  <p>${escapeHtml(product.output)}</p>
+                  <div class="price">${escapeHtml(product.price)}</div>
+                  <code>${escapeHtml(product.endpoint.replace(serviceBase, ""))}</code>
+                </article>
+              `).join("")}
+            </div>
+            <div class="route-grid">
+              ${paidProducts.map((product) => `
+                <article class="route-card paid">
+                  <div class="route-tag">Paid x402</div>
+                  <h3>${escapeHtml(product.name)}</h3>
+                  <p>${escapeHtml(product.output)}</p>
+                  <div class="price">${escapeHtml(product.price)}</div>
+                  <code>${escapeHtml(product.endpoint.replace(serviceBase, ""))}</code>
+                </article>
+              `).join("")}
+            </div>
+          </div>
+        </div>
       </section>
 
       <section class="section">
-        <div class="head">
-          <div><div class="kicker">Product Ladder</div><h2>Free trust first. Paid leverage after.</h2></div>
-          <p>The public surface is built to reduce friction for both humans and agents. Free routes answer the first hard question; paid routes only show up when ranked output is actually worth paying for.</p>
+        <div class="section-label">
+          <div class="list-tag">Market Sheet</div>
+          <h2>Where work is likely to appear.</h2>
+          <p>Two editorial lenses: ranked project fit and builder watch. One tells you where pressure is building. The other tells you who is visibly moving.</p>
         </div>
-        <div class="products">
-          <div class="three">
-            ${freeProducts.map((product) => `
-              <article class="route-card product free">
-                <div class="route-tag">Free</div>
-                <h3>${escapeHtml(product.name)}</h3>
-                <p>${escapeHtml(product.output)}</p>
-                <div class="price">${escapeHtml(product.price)}</div>
-                <code>${escapeHtml(product.endpoint.replace(serviceBase, ""))}</code>
-              </article>
-            `).join("")}
-          </div>
-          <div class="three">
-            ${paidProducts.map((product) => `
-              <article class="route-card product paid">
-                <div class="route-tag">Paid x402</div>
-                <h3>${escapeHtml(product.name)}</h3>
-                <p>${escapeHtml(product.output)}</p>
-                <div class="price">${escapeHtml(product.price)}</div>
-                <code>${escapeHtml(product.endpoint.replace(serviceBase, ""))}</code>
-              </article>
-            `).join("")}
-          </div>
-        </div>
-      </section>
-
-      <section class="section split">
-        <div class="pane">
-          <div class="kicker">Live Targets</div>
-          <h2>Where the work is.</h2>
-          <div class="list">
+        <div class="section-body">
+          <div class="fit-list">
             ${top.map((project) => `
-              <article class="op-item">
+              <article class="fit-card">
+                <div class="route-tag">Project target</div>
                 <h3>${escapeHtml(project.title)}</h3>
                 <p>${escapeHtml(project.reason)} ${escapeHtml(project.firstMove)}</p>
                 <div class="meta"><span>${escapeHtml(project.status)}</span><span>score ${project.score}</span><span>${escapeHtml(project.angle)}</span></div>
               </article>
             `).join("")}
           </div>
-        </div>
-        <div class="pane">
-          <div class="kicker">Builder Watch</div>
-          <h2>Who is moving.</h2>
-          <div class="list">
+          <div class="watch-list">
             ${watch.map((entry) => `
-              <article class="op-item">
+              <article class="watch-card">
+                <div class="route-tag">Builder watch</div>
                 <h3>${escapeHtml(entry.displayName)}</h3>
                 <p>${escapeHtml(entry.description)}</p>
                 <div class="meta"><span>leaderboard ${entry.score}</span></div>
@@ -1520,44 +1588,57 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       </section>
 
       <section class="section">
-        <div class="head">
-          <div><div class="kicker">Buyer Prompts</div><h2>Exactly what to ask this agent.</h2></div>
-          <p>These are the request shapes most likely to turn into useful technical work, not generic conversation.</p>
+        <div class="section-label">
+          <div class="list-tag">Buyer Desk</div>
+          <h2>Prompts that sound like real work.</h2>
+          <p>This is the part most agents get wrong. The page should tell a buyer exactly what to ask, in language that already sounds close to the paid deliverable.</p>
         </div>
-        <div class="three">
-          ${hireKit.bestFitRequests.map((item) => `
-            <article class="prompt-card">
-              <div class="route-tag">Best-fit request</div>
-              <h3>${escapeHtml(item.title)}</h3>
-              <p>${escapeHtml(item.useWhen)}</p>
-              <pre>${escapeHtml(item.prompt)}</pre>
-            </article>
-          `).join("")}
+        <div class="section-body">
+          <div class="buyers-grid">
+            ${hireKit.bestFitRequests.map((item) => `
+              <article class="buyer-card">
+                <div class="route-tag">Best-fit request</div>
+                <h3>${escapeHtml(item.title)}</h3>
+                <p>${escapeHtml(item.useWhen)}</p>
+                <pre>${escapeHtml(item.prompt)}</pre>
+              </article>
+            `).join("")}
+          </div>
         </div>
       </section>
 
       <section class="section">
-        <div class="head">
-          <div><div class="kicker">Machine Discovery</div><h2>Built for agents too, not only browsers.</h2></div>
-          <p>Other runtimes can now discover and use the service without scraping the page by hand.</p>
+        <div class="section-label">
+          <div class="list-tag">Machine Layer</div>
+          <h2>Readable by agents, not just people.</h2>
+          <p>Discovery surfaces are presented as first-class product assets. Another runtime should be able to route into this service without reverse-engineering the page.</p>
         </div>
-        <div class="three">
-          ${discoveryLinks.map((item) => `
-            <article class="route-card">
-              <div class="route-tag">Discovery surface</div>
-              <h3>${escapeHtml(item.title)}</h3>
-              <p>${escapeHtml(item.detail)}</p>
-              <code>${escapeHtml(item.href.replace(serviceBase, ""))}</code>
-            </article>
-          `).join("")}
+        <div class="section-body">
+          <div class="discovery-grid">
+            ${discoveryLinks.map((item) => `
+              <article class="discovery-card">
+                <div class="route-tag">Discovery surface</div>
+                <h3>${escapeHtml(item.title)}</h3>
+                <p>${escapeHtml(item.detail)}</p>
+                <code>${escapeHtml(item.href.replace(serviceBase, ""))}</code>
+              </article>
+            `).join("")}
+          </div>
         </div>
       </section>
 
-      <section class="section split">
-        <article class="terminal">
-          <div class="kicker">Fast Start</div>
-          <h2>Use it in minutes.</h2>
-          <pre>GET ${serviceBase}/api/preview
+      <section class="section">
+        <div class="section-label">
+          <div class="list-tag">Console</div>
+          <h2>Fast start, then escalation.</h2>
+          <p>The free routes should be obvious in under ten seconds. The paid routes should feel like a deliberate move up the ladder, not a hidden API footnote.</p>
+        </div>
+        <div class="section-body">
+          <div class="terminal-grid">
+            <article class="console">
+              <div class="route-tag">Start free</div>
+              <h3>Read the surface before you buy.</h3>
+              <pre>GET ${serviceBase}/api/preview
 
 GET ${serviceBase}/api/hire
 
@@ -1573,11 +1654,11 @@ POST ${serviceBase}/api/auth-debug
   "message": "AIBTC Check-In | 2026-04-09T13:30:00Z",
   "signature": "<signature>"
 }</pre>
-        </article>
-        <article class="terminal">
-          <div class="kicker">Escalate</div>
-          <h2>When free is not enough.</h2>
-          <pre>POST ${serviceBase}/api/project-fit
+            </article>
+            <article class="console">
+              <div class="route-tag">Escalate</div>
+              <h3>Move into paid leverage only when the answer is worth it.</h3>
+              <pre>POST ${serviceBase}/api/project-fit
 {
   "focus": "x402 wallet debug",
   "limit": 3
@@ -1590,8 +1671,26 @@ POST ${serviceBase}/api/service-map
 
 GET ${serviceBase}/llms.txt
 GET ${serviceBase}/openapi.json</pre>
-          <div class="foot">Generated from live AIBTC activity, leaderboard, project-board, and bounty surfaces at ${escapeHtml(snapshot.generatedAt)}.</div>
-        </article>
+              <div class="foot">Generated from live AIBTC activity, leaderboard, project-board, and bounty surfaces at ${escapeHtml(snapshot.generatedAt)}.</div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="closing">
+        <div class="closing-copy">
+          <div class="list-tag">Closing Note</div>
+          <h2>Editorial front. Technical spine.</h2>
+          <p>Satsmith is deliberately opinionated. The visual language says publication. The route structure says operator tooling. The conversion logic says start with proof, then pay for leverage. That mix is the point.</p>
+        </div>
+        <div class="closing-panel">
+          <div>
+            <div class="list-tag">Best next click</div>
+            <h3>Open the free route that kills the biggest uncertainty first.</h3>
+            <p>If the question is trust, open counterparty. If the question is signatures or wallet flow, open auth-debug. If the question is fit or monetization, escalate into x402 and stop guessing.</p>
+          </div>
+          <a class="cta" href="${serviceBase}/api/hire"><strong>Open buyer kit</strong><span>Use the exact prompt shapes that convert into real technical work.</span></a>
+        </div>
       </section>
     </div>
   </div>
