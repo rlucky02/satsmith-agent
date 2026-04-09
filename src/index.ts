@@ -981,6 +981,9 @@ function buildCatalog(serviceBase: string) {
     ],
     endpoints: {
       "/health": { method: "GET", cost: "free" },
+      "/llms.txt": { method: "GET", cost: "free" },
+      "/openapi.json": { method: "GET", cost: "free" },
+      "/.well-known/ai-plugin.json": { method: "GET", cost: "free" },
       "/api/preview": { method: "GET", cost: "free" },
       "/api/catalog": { method: "GET", cost: "free" },
       "/api/examples": { method: "GET", cost: "free" },
@@ -992,6 +995,270 @@ function buildCatalog(serviceBase: string) {
       "/api/service-map": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
     },
     liveProducts: buildServiceProducts(serviceBase),
+  };
+}
+
+function buildLlmsTxt(serviceBase: string) {
+  return `# Satsmith Intelligence Suite
+
+Satsmith is a Bitcoin/Stacks/x402 operator-intelligence agent on AIBTC.
+
+Base URL: ${serviceBase}
+AIBTC profile: https://aibtc.com/agents/bc1ql00qwp4mnw6q6ux7hfcjhkj5wdwj4445pc6u9h
+Project board: https://aibtc-projects.pages.dev/?id=r_499b082c
+Public repo: https://github.com/rlucky02/satsmith-agent
+
+## What Satsmith is for
+
+- debug AIBTC registration, heartbeat, inbox, signing, and wallet-auth failures
+- run counterparty due diligence on builders, repos, and project-board entries
+- rank live AIBTC opportunities and builder targets
+- map buyer pain into x402-compatible services and technical deliverables
+
+## Free routes
+
+- GET ${serviceBase}/api/preview
+  Free live market snapshot, top opportunities, builder watch, and product catalog.
+
+- GET ${serviceBase}/api/catalog
+  Machine-readable list of live routes and products.
+
+- GET ${serviceBase}/api/examples
+  Copy-paste request examples for all free and paid routes.
+
+- GET ${serviceBase}/api/hire
+  Buyer-facing hire kit with best-fit requests and copy-paste prompts.
+
+- GET ${serviceBase}/api/counterparty
+  Usage surface for the free counterparty route.
+
+- POST ${serviceBase}/api/counterparty
+  Input: target, projectId, githubUrl, founder.
+  Output: trust score, positives, risks, decision, recommended pitch, related builders.
+
+- GET ${serviceBase}/api/auth-debug
+  Usage surface for the free auth-debug route.
+
+- POST ${serviceBase}/api/auth-debug
+  Input: flow, address, chain, message, signature, context.
+  Output: classification, findings, notes, nextActions, escalation.
+
+## Paid routes
+
+- POST ${serviceBase}/api/digest
+  x402 paid route. Ranked opportunity digest for a focus or filter.
+
+- POST ${serviceBase}/api/project-fit
+  x402 paid route. Best-fit projects and pitch angles for a technical niche.
+
+- POST ${serviceBase}/api/service-map
+  x402 paid route. Adjacent product ideas and monetization hooks.
+
+## Best prompts
+
+- "Run due diligence on this project, founder, or repo and tell me whether I should engage now, wait, or avoid it."
+- "Check this address, message, signature, and failing AIBTC flow. Tell me the most likely exact mismatch and the next thing I should try."
+- "Give me the best current AIBTC opportunities for this niche and the sharpest first move for each one."
+- "Map the fastest route to a working x402 endpoint for this repo, including the first shippable implementation slice."
+`;
+}
+
+function buildOpenApi(serviceBase: string) {
+  return {
+    openapi: "3.1.0",
+    info: {
+      title: "Satsmith Intelligence Suite",
+      version: SERVICE_VERSION,
+      description: "Bitcoin-native operator intelligence and technical delivery for AIBTC builders, wallet flows, signing, and x402.",
+    },
+    servers: [
+      {
+        url: serviceBase,
+      },
+    ],
+    paths: {
+      "/health": {
+        get: {
+          summary: "Health check",
+          responses: {
+            "200": {
+              description: "Worker health status",
+            },
+          },
+        },
+      },
+      "/api/preview": {
+        get: {
+          summary: "Free live market snapshot",
+          responses: {
+            "200": {
+              description: "Current AIBTC activity summary, top opportunities, builder watch, and product list",
+            },
+          },
+        },
+      },
+      "/api/catalog": {
+        get: {
+          summary: "Machine-readable route catalog",
+          responses: {
+            "200": {
+              description: "Live routes, costs, and products",
+            },
+          },
+        },
+      },
+      "/api/examples": {
+        get: {
+          summary: "Copy-paste example requests",
+          responses: {
+            "200": {
+              description: "Example inputs for free and paid routes",
+            },
+          },
+        },
+      },
+      "/api/hire": {
+        get: {
+          summary: "Buyer-facing hire kit",
+          responses: {
+            "200": {
+              description: "Best-fit requests and prompts for hiring Satsmith",
+            },
+          },
+        },
+      },
+      "/api/counterparty": {
+        get: {
+          summary: "Counterparty route usage",
+          responses: {
+            "200": {
+              description: "Usage contract and example for the free counterparty report",
+            },
+          },
+        },
+        post: {
+          summary: "Free counterparty due-diligence report",
+          requestBody: {
+            required: false,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    target: { type: "string" },
+                    projectId: { type: "string" },
+                    githubUrl: { type: "string" },
+                    founder: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Trust score, positives, risks, and recommended engagement posture",
+            },
+          },
+        },
+      },
+      "/api/auth-debug": {
+        get: {
+          summary: "Auth-debug route usage",
+          responses: {
+            "200": {
+              description: "Usage contract and example for the free auth-debug report",
+            },
+          },
+        },
+        post: {
+          summary: "Free AIBTC auth and signing triage",
+          requestBody: {
+            required: false,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    flow: { type: "string" },
+                    address: { type: "string" },
+                    chain: { type: "string" },
+                    message: { type: "string" },
+                    signature: { type: "string" },
+                    context: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Structured findings and next-step debug guidance",
+            },
+          },
+        },
+      },
+      "/api/digest": {
+        post: {
+          summary: "Paid opportunity digest",
+          responses: {
+            "402": {
+              description: "x402 payment required",
+            },
+            "200": {
+              description: "Ranked opportunities and market summary",
+            },
+          },
+        },
+      },
+      "/api/project-fit": {
+        post: {
+          summary: "Paid niche fit report",
+          responses: {
+            "402": {
+              description: "x402 payment required",
+            },
+            "200": {
+              description: "Best-fit projects and recommended pitch",
+            },
+          },
+        },
+      },
+      "/api/service-map": {
+        post: {
+          summary: "Paid service-map report",
+          responses: {
+            "402": {
+              description: "x402 payment required",
+            },
+            "200": {
+              description: "Adjacent products and monetization hooks",
+            },
+          },
+        },
+      },
+    },
+  };
+}
+
+function buildAiPluginManifest(serviceBase: string) {
+  return {
+    schema_version: "v1",
+    name_for_human: "Satsmith Intelligence Suite",
+    name_for_model: "satsmith_intelligence_suite",
+    description_for_human: "Bitcoin/Stacks/x402 operator intelligence, auth triage, and counterparty due diligence for AIBTC builders.",
+    description_for_model:
+      "Use this service to inspect AIBTC opportunities, run counterparty due diligence on public projects and repos, and debug AIBTC wallet-auth/signature flows. Prefer free routes first, then paid x402 reports if deeper ranked output is needed.",
+    auth: {
+      type: "none",
+    },
+    api: {
+      type: "openapi",
+      url: `${serviceBase}/openapi.json`,
+      is_user_authenticated: false,
+    },
+    logo_url: "https://github.com/rlucky02.png",
+    contact_email: "none@local.invalid",
+    legal_info_url: "https://github.com/rlucky02/satsmith-agent",
   };
 }
 
@@ -1213,6 +1480,8 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
         <a href="${serviceBase}/api/counterparty">Counterparty route</a>
         <a href="${serviceBase}/api/examples">See example requests</a>
         <a href="${serviceBase}/api/auth-debug">Auth debug route</a>
+        <a href="${serviceBase}/llms.txt">llms.txt</a>
+        <a href="${serviceBase}/openapi.json">OpenAPI</a>
         <a href="https://aibtc.com/agents/bc1ql00qwp4mnw6q6ux7hfcjhkj5wdwj4445pc6u9h">AIBTC profile</a>
         <a href="https://github.com/rlucky02/satsmith-agent">Public repo</a>
         <a href="https://aibtc-projects.pages.dev/?id=r_499b082c">AIBTC project board</a>
@@ -1381,6 +1650,22 @@ app.get("/health", (c) => {
     timestamp: new Date().toISOString(),
     network: c.env.NETWORK || "mainnet",
   });
+});
+
+app.get("/llms.txt", (c) => {
+  const serviceBase = new URL(c.req.url).origin;
+  c.header("Content-Type", "text/plain; charset=utf-8");
+  return c.text(buildLlmsTxt(serviceBase));
+});
+
+app.get("/openapi.json", (c) => {
+  const serviceBase = new URL(c.req.url).origin;
+  return c.json(buildOpenApi(serviceBase));
+});
+
+app.get("/.well-known/ai-plugin.json", (c) => {
+  const serviceBase = new URL(c.req.url).origin;
+  return c.json(buildAiPluginManifest(serviceBase));
 });
 
 app.get("/api/preview", async (c) => {

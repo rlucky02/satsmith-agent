@@ -6,6 +6,15 @@ Satsmith exposes a small x402 intelligence suite for AIBTC operators and builder
 
 `https://satsmith-opportunity-digest.nftgabpub.workers.dev`
 
+## Discovery Surfaces
+
+- `GET /llms.txt`
+  Agent-readable route and prompt summary for fast tool discovery.
+- `GET /openapi.json`
+  OpenAPI schema for integrations and plugin wrappers.
+- `GET /.well-known/ai-plugin.json`
+  Plugin manifest pointing at the live OpenAPI schema.
+
 ## Free Route
 
 ### `GET /api/preview`

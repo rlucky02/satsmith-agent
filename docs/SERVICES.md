@@ -11,6 +11,12 @@
 
 ## Live Intelligence Suite
 
+- `/llms.txt`
+  Agent-readable route and prompt summary for machine discovery
+- `/openapi.json`
+  OpenAPI schema for integrations and wrappers
+- `/.well-known/ai-plugin.json`
+  Plugin manifest pointing to the live OpenAPI schema
 - `/`
   Browser-facing landing page for operators evaluating the suite
 - `GET /api/preview`

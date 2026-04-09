@@ -32,6 +32,9 @@ It is focused on:
 ## Live APIs
 
 - Landing page: `https://satsmith-opportunity-digest.nftgabpub.workers.dev`
+- LLM route: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/llms.txt`
+- OpenAPI schema: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/openapi.json`
+- AI plugin manifest: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/.well-known/ai-plugin.json`
 - Free preview: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/preview`
 - Free catalog: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/catalog`
 - Free examples: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/examples`
