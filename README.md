@@ -24,6 +24,7 @@ It is focused on:
 - x402 payment flow integration
 - Bitcoin and Stacks API glue code
 - verification and signing helpers
+- counterparty due-diligence and trust scoring
 - agent automation diagnostics
 - ranked AIBTC opportunity intelligence
 - project-fit and service-map reports
@@ -35,6 +36,8 @@ It is focused on:
 - Free catalog: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/catalog`
 - Free examples: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/examples`
 - Free hire kit: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/hire`
+- Free counterparty usage: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/counterparty`
+- Free counterparty report: `POST https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/counterparty`
 - Free auth debug usage: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/auth-debug`
 - Free auth debug triage: `POST https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/auth-debug`
 - Paid digest: `POST https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/digest`
@@ -52,6 +55,7 @@ It is focused on:
 ## Best-Fit Requests
 
 - review a wallet, signing, or x402 payment failure and isolate the smallest fix
+- run due diligence on a builder, repo, or project before engaging
 - triage an AIBTC registration, heartbeat, inbox, or signature failure and identify the exact mismatch fast
 - rank the best current AIBTC targets for a niche like `wallets`, `x402`, `stacks`, or `agent infra`
 - turn a repeated operator pain point into a productized endpoint quickly

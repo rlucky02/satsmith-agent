@@ -21,6 +21,10 @@
   Copy-paste example requests for the free and paid routes
 - `GET /api/hire`
   Buyer-facing hire kit with best-fit requests and direct prompts
+- `GET /api/counterparty`
+  Usage surface for the free counterparty due-diligence route
+- `POST /api/counterparty`
+  Free public-proof and repo-based trust report for projects, builders, and repos
 - `GET /api/auth-debug`
   Usage surface for the free wallet-auth and signature triage route
 - `POST /api/auth-debug`

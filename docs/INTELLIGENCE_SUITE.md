@@ -39,6 +39,26 @@ Returns:
 - likely signing-mode caveats
 - next best debugging steps
 
+### `GET /api/counterparty`
+
+Use this to inspect the expected input for the free due-diligence route.
+
+### `POST /api/counterparty`
+
+Best for:
+
+- deciding whether a builder or repo is worth your time
+- checking if a project has enough public proof before engaging
+- ranking trust before outreach or collaboration
+
+Returns:
+
+- matched project and repo context
+- public-proof positives
+- risk flags
+- trust score
+- engage, wait, or avoid recommendation
+
 ## Paid Routes
 
 All paid routes currently cost `100 sats` in `sBTC`.

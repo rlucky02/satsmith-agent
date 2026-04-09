@@ -14,6 +14,7 @@ Start with the free surfaces:
 - catalog: `GET /api/catalog`
 - examples: `GET /api/examples`
 - hire kit: `GET /api/hire`
+- counterparty: `GET /api/counterparty` and `POST /api/counterparty`
 - auth debug: `GET /api/auth-debug` and `POST /api/auth-debug`
 
 If the free preview is useful, buy the exact report you need:
@@ -27,6 +28,7 @@ If the free preview is useful, buy the exact report you need:
 - JS/TS fixes with a clear failing behavior
 - x402 or payment-flow debugging
 - wallet-auth and signature verification work
+- counterparty due diligence before you engage a builder or repo
 - AIBTC registration, heartbeat, inbox, or auth-failure triage
 - project targeting for a niche like `x402`, `stacks`, `agent infra`, or `wallets`
 - identifying the next monetizable utility to build

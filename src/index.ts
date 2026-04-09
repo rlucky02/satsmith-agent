@@ -79,6 +79,27 @@ type AuthDebugInput = {
   context?: string;
 };
 
+type CounterpartyInput = {
+  target?: string;
+  projectId?: string;
+  githubUrl?: string;
+  founder?: string;
+};
+
+type GitHubRepoSummary = {
+  fullName: string;
+  description: string;
+  stars: number;
+  forks: number;
+  openIssues: number;
+  archived: boolean;
+  pushedAt: string | null;
+  updatedAt: string | null;
+  defaultBranch: string | null;
+  homepage: string | null;
+  license: string | null;
+};
+
 const SERVICE_NAME = "satsmith-intelligence-suite";
 const SERVICE_VERSION = "0.4.0";
 const SERVICE_PRICE_SATS = "100";
@@ -396,6 +417,266 @@ function buildAuthDebug(body: AuthDebugInput) {
   };
 }
 
+function normalizeGitHubRepoSlug(value: string | null | undefined): string | null {
+  const raw = String(value ?? "").trim();
+  if (!raw) {
+    return null;
+  }
+
+  const match = raw.match(/github\.com\/([^/\s]+)\/([^/\s#?]+)/i);
+  if (match) {
+    return `${match[1]}/${match[2].replace(/\.git$/i, "")}`;
+  }
+
+  if (/^[^/\s]+\/[^/\s]+$/.test(raw)) {
+    return raw.replace(/\.git$/i, "");
+  }
+
+  return null;
+}
+
+function daysSince(value: string | null | undefined): number | null {
+  const parsed = Date.parse(String(value ?? ""));
+  if (Number.isNaN(parsed)) {
+    return null;
+  }
+  return Math.floor((Date.now() - parsed) / 86_400_000);
+}
+
+async function fetchGitHubRepoSummary(githubUrl: string | null | undefined): Promise<GitHubRepoSummary | null> {
+  const slug = normalizeGitHubRepoSlug(githubUrl);
+  if (!slug) {
+    return null;
+  }
+
+  const response = await fetch(`https://api.github.com/repos/${slug}`, {
+    headers: {
+      Accept: "application/vnd.github+json",
+      "User-Agent": "satsmith-agent",
+    },
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const payload = (await response.json()) as {
+    full_name?: string;
+    description?: string;
+    stargazers_count?: number;
+    forks_count?: number;
+    open_issues_count?: number;
+    archived?: boolean;
+    pushed_at?: string;
+    updated_at?: string;
+    default_branch?: string;
+    homepage?: string;
+    license?: { spdx_id?: string; name?: string } | null;
+  };
+
+  return {
+    fullName: payload.full_name ?? slug,
+    description: payload.description ?? "",
+    stars: toNumber(payload.stargazers_count),
+    forks: toNumber(payload.forks_count),
+    openIssues: toNumber(payload.open_issues_count),
+    archived: payload.archived === true,
+    pushedAt: payload.pushed_at ?? null,
+    updatedAt: payload.updated_at ?? null,
+    defaultBranch: payload.default_branch ?? null,
+    homepage: payload.homepage ?? null,
+    license: payload.license?.spdx_id ?? payload.license?.name ?? null,
+  };
+}
+
+function scoreCounterpartyCandidate(project: Project, input: CounterpartyInput) {
+  let score = 0;
+  const target = String(input.target ?? "").trim().toLowerCase();
+  const founder = String(input.founder ?? "").trim().toLowerCase();
+  const repoSlug = normalizeGitHubRepoSlug(input.githubUrl);
+  const projectRepoSlug = normalizeGitHubRepoSlug(project.githubUrl);
+  const searchable = `${project.title} ${project.description} ${project.githubUrl ?? ""} ${project.founder ?? ""} ${project.claimedBy ?? ""}`.toLowerCase();
+
+  if (input.projectId && project.id === input.projectId) {
+    score += 100;
+  }
+  if (repoSlug && projectRepoSlug === repoSlug) {
+    score += 90;
+  }
+  if (founder && (project.founder?.toLowerCase().includes(founder) || project.claimedBy?.toLowerCase().includes(founder))) {
+    score += 45;
+  }
+  if (target) {
+    if (project.title.toLowerCase().includes(target)) score += 40;
+    if (project.description.toLowerCase().includes(target)) score += 22;
+    if ((project.founder ?? "").toLowerCase().includes(target)) score += 24;
+    if ((project.claimedBy ?? "").toLowerCase().includes(target)) score += 18;
+    if ((project.githubUrl ?? "").toLowerCase().includes(target)) score += 18;
+  }
+
+  if (!input.projectId && !repoSlug && !founder && !target) {
+    score += scoreProject(project);
+  }
+
+  return score;
+}
+
+async function buildCounterpartyReport(snapshot: MarketSnapshot, input: CounterpartyInput) {
+  const candidates = snapshot.projects
+    .map((project) => ({ project, score: scoreCounterpartyCandidate(project, input) }))
+    .sort((left, right) => right.score - left.score);
+  const best = candidates[0];
+  const matchedProject = best && best.score > 0 ? best.project : null;
+  const repoSummary = await fetchGitHubRepoSummary(input.githubUrl ?? matchedProject?.githubUrl ?? null);
+  const positives: string[] = [];
+  const risks: string[] = [];
+  let trustScore = 45;
+
+  if (matchedProject?.founder || matchedProject?.claimedBy) {
+    trustScore += 10;
+    positives.push(`Project has a visible human/agent owner: ${matchedProject.founder ?? matchedProject.claimedBy}.`);
+  } else if (matchedProject) {
+    trustScore -= 8;
+    risks.push("No visible founder or claimant is attached to the project entry.");
+  }
+
+  if (matchedProject) {
+    if (matchedProject.deliverableCount >= 3) {
+      trustScore += 14;
+      positives.push(`Public proof exists: ${matchedProject.deliverableCount} deliverable(s) are visible on the project board.`);
+    } else if (matchedProject.deliverableCount === 0) {
+      trustScore -= 10;
+      risks.push("Project has no visible public deliverables yet.");
+    }
+
+    if (matchedProject.openGoals === 0) {
+      trustScore += 8;
+      positives.push("No open project-board goals are visible.");
+    } else if (matchedProject.openGoals >= 3) {
+      trustScore -= 8;
+      risks.push(`Project still shows ${matchedProject.openGoals} open goals, so execution may be behind plan.`);
+    }
+
+    if (matchedProject.reputationCount > 0) {
+      const repBoost = Math.min(15, Math.round(matchedProject.reputationAverage * 3));
+      trustScore += repBoost;
+      positives.push(`Project has reputation data: ${matchedProject.reputationAverage.toFixed(1)} average across ${matchedProject.reputationCount} rating(s).`);
+      if (matchedProject.reputationAverage < 3) {
+        trustScore -= 10;
+        risks.push("Reputation is present but weak, which reduces confidence.");
+      }
+    }
+
+    if (matchedProject.mentions > 0) {
+      trustScore += Math.min(8, matchedProject.mentions);
+      positives.push(`Project is being discussed publicly (${matchedProject.mentions} mention(s)).`);
+    }
+
+    if (matchedProject.status === "done") {
+      trustScore += 10;
+      positives.push("Project board status is done.");
+    } else if (matchedProject.status === "in-progress") {
+      trustScore += 6;
+      positives.push("Project is actively in progress.");
+    } else if (matchedProject.status === "blocked") {
+      trustScore -= 16;
+      risks.push("Project is marked blocked on the public board.");
+    }
+
+    const projectAge = daysSince(matchedProject.updatedAt);
+    if (projectAge !== null && projectAge <= 14) {
+      trustScore += 8;
+      positives.push(`Project board was updated recently (${projectAge} day(s) ago).`);
+    } else if (projectAge !== null && projectAge > 45) {
+      trustScore -= 10;
+      risks.push(`Project board looks stale (${projectAge} day(s) since update).`);
+    }
+  }
+
+  if (repoSummary) {
+    if (repoSummary.archived) {
+      trustScore -= 25;
+      risks.push("GitHub repo is archived.");
+    } else {
+      trustScore += 6;
+      positives.push("GitHub repo is active, not archived.");
+    }
+
+    if (repoSummary.stars > 0) {
+      trustScore += Math.min(10, Math.max(2, Math.ceil(Math.log2(repoSummary.stars + 1) * 2)));
+      positives.push(`GitHub repo has public traction (${repoSummary.stars} star(s), ${repoSummary.forks} fork(s)).`);
+    }
+
+    const pushedAge = daysSince(repoSummary.pushedAt);
+    if (pushedAge !== null && pushedAge <= 14) {
+      trustScore += 10;
+      positives.push(`Repo has recent code activity (${pushedAge} day(s) since push).`);
+    } else if (pushedAge !== null && pushedAge > 60) {
+      trustScore -= 12;
+      risks.push(`Repo looks stale (${pushedAge} day(s) since push).`);
+    }
+  } else if (matchedProject?.githubUrl) {
+    trustScore -= 4;
+    risks.push("GitHub repo exists on the project board but public repo metadata could not be loaded right now.");
+  } else {
+    trustScore -= 10;
+    risks.push("No GitHub repo is attached, which lowers confidence for technical execution.");
+  }
+
+  trustScore = Math.max(0, Math.min(100, trustScore));
+
+  let decision = "Engage carefully with a bounded first task.";
+  if (trustScore >= 75) {
+    decision = "Good counterparty. Safe to propose a direct technical deliverable.";
+  } else if (trustScore >= 55) {
+    decision = "Promising, but ask for a tightly scoped first task and proof before expanding.";
+  } else if (trustScore >= 35) {
+    decision = "Mixed signal. Prefer monitoring or a very small proof-first engagement.";
+  } else {
+    decision = "Low-trust target right now. Avoid unless new proof appears.";
+  }
+
+  const targetText = [matchedProject?.title, matchedProject?.founder, matchedProject?.claimedBy, input.target]
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    generatedAt: snapshot.generatedAt,
+    query: {
+      target: input.target ?? null,
+      projectId: input.projectId ?? null,
+      githubUrl: input.githubUrl ?? null,
+      founder: input.founder ?? null,
+    },
+    matchedProject: matchedProject
+      ? {
+          id: matchedProject.id,
+          title: matchedProject.title,
+          status: matchedProject.status,
+          founder: matchedProject.founder,
+          claimedBy: matchedProject.claimedBy,
+          githubUrl: matchedProject.githubUrl,
+          deliverables: matchedProject.deliverableCount,
+          openGoals: matchedProject.openGoals,
+          mentions: matchedProject.mentions,
+          reputationAverage: matchedProject.reputationAverage,
+          reputationCount: matchedProject.reputationCount,
+          updatedAt: matchedProject.updatedAt,
+        }
+      : null,
+    github: repoSummary,
+    trustScore,
+    positives,
+    risks,
+    decision,
+    recommendedPitch:
+      matchedProject && trustScore >= 55
+        ? `Open with one bounded technical slice for ${matchedProject.title}, then expand only after visible delivery.`
+        : "Ask for one tiny proof-first task or wait for stronger public proof before investing deeper effort.",
+    relatedBuilders: buildBuilderWatch(snapshot.leaderboard, extractFocusTerms(targetText), 3),
+  };
+}
+
 async function fetchJson<T>(url: string): Promise<T> {
   const response = await fetch(url, {
     headers: { Accept: "application/json" },
@@ -568,14 +849,6 @@ function buildServiceGaps(projects: Project[]) {
   const searchable = projects.map((project) => `${project.title} ${project.description}`).join(" ").toLowerCase();
   const gaps: Array<{ title: string; reason: string; action: string }> = [];
 
-  if (!/reputation|counterparty|due diligence/.test(searchable)) {
-    gaps.push({
-      title: "Counterparty due-diligence report",
-      reason: "AIBTC surfaces show builders and work, but not a compact risk report for who to trust and engage.",
-      action: "Offer a paid trust report keyed to wallet, repo, and public activity.",
-    });
-  }
-
   if (!/sales|classified|advert|sponsor/.test(searchable)) {
     gaps.push({
       title: "Sponsored signal and classifieds router",
@@ -620,6 +893,14 @@ function buildServiceProducts(serviceBase: string) {
       price: "free",
       buyer: "Buyers who need the fastest path to a useful request",
       output: "Best-fit requests, copy-paste prompts, and direct contact surface",
+    },
+    {
+      name: "Counterparty report",
+      status: "free",
+      endpoint: `${serviceBase}/api/counterparty`,
+      price: "free",
+      buyer: "Operators who need a fast trust check before engaging a builder, repo, or project",
+      output: "Public-proof and repo-based trust score, risks, positives, and an engage-or-wait recommendation",
     },
     {
       name: "Auth debug",
@@ -704,6 +985,7 @@ function buildCatalog(serviceBase: string) {
       "/api/catalog": { method: "GET", cost: "free" },
       "/api/examples": { method: "GET", cost: "free" },
       "/api/hire": { method: "GET", cost: "free" },
+      "/api/counterparty": { method: "GET | POST", cost: "free" },
       "/api/auth-debug": { method: "GET | POST", cost: "free" },
       "/api/digest": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
       "/api/project-fit": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
@@ -728,6 +1010,12 @@ function buildHireKit(serviceBase: string) {
         useWhen: "AIBTC, x402, BTC, or STX signing is failing and the buyer needs a bounded debugging pass.",
         prompt:
           "Review this wallet or signature flow, identify the failure path, and tell me the smallest fix that gets it shipping.",
+      },
+      {
+        title: "Counterparty due diligence",
+        useWhen: "You need to know whether a builder, repo, or AIBTC project looks worth engaging before spending time on it.",
+        prompt:
+          "Run due diligence on this project, founder, or repo and tell me whether I should engage now, wait, or avoid it.",
       },
       {
         title: "AIBTC auth triage",
@@ -922,6 +1210,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       <div class="cta">
         <a class="primary" href="${serviceBase}/api/preview">Open free preview</a>
         <a href="${serviceBase}/api/hire">Open hire kit</a>
+        <a href="${serviceBase}/api/counterparty">Counterparty route</a>
         <a href="${serviceBase}/api/examples">See example requests</a>
         <a href="${serviceBase}/api/auth-debug">Auth debug route</a>
         <a href="https://aibtc.com/agents/bc1ql00qwp4mnw6q6ux7hfcjhkj5wdwj4445pc6u9h">AIBTC profile</a>
@@ -999,6 +1288,11 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
         <pre>GET ${serviceBase}/api/preview
 
 GET ${serviceBase}/api/hire
+
+POST ${serviceBase}/api/counterparty
+{
+  "target": "Tiny Marten"
+}
 
 POST ${serviceBase}/api/auth-debug
 {
@@ -1121,6 +1415,13 @@ app.get("/api/examples", (c) => {
         method: "GET",
         url: `${serviceBase}/api/hire`,
       },
+      counterparty: {
+        method: "POST",
+        url: `${serviceBase}/api/counterparty`,
+        body: {
+          target: "Tiny Marten",
+        },
+      },
       authDebug: {
         method: "POST",
         url: `${serviceBase}/api/auth-debug`,
@@ -1169,6 +1470,32 @@ app.get("/api/hire", (c) => {
     generatedAt: new Date().toISOString(),
     ...buildHireKit(serviceBase),
   });
+});
+
+app.get("/api/counterparty", (c) => {
+  const serviceBase = new URL(c.req.url).origin;
+  return c.json({
+    generatedAt: new Date().toISOString(),
+    route: `${serviceBase}/api/counterparty`,
+    method: "POST",
+    description: "Free counterparty due-diligence report for AIBTC projects, builders, and GitHub repos.",
+    fields: {
+      target: "project title, builder name, or free-text target",
+      projectId: "optional exact AIBTC Projects id",
+      githubUrl: "optional GitHub repo URL",
+      founder: "optional founder or claimant name",
+    },
+    example: {
+      target: "AIBTC Skills",
+      githubUrl: "https://github.com/aibtcdev/skills",
+    },
+  });
+});
+
+app.post("/api/counterparty", async (c) => {
+  const body = await parseJsonBody<CounterpartyInput>(c.req.raw);
+  const snapshot = await loadMarketSnapshot();
+  return c.json(await buildCounterpartyReport(snapshot, body));
 });
 
 app.get("/api/auth-debug", (c) => {
