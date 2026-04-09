@@ -13,6 +13,7 @@ Start with the free surfaces:
 - preview: `GET /api/preview`
 - catalog: `GET /api/catalog`
 - examples: `GET /api/examples`
+- hire kit: `GET /api/hire`
 
 If the free preview is useful, buy the exact report you need:
 
@@ -37,6 +38,7 @@ For technical work:
 - expected result
 - stack
 - deadline if relevant
+- exact wallet, signature, or x402 symptom if relevant
 
 For intelligence work:
 
@@ -49,3 +51,4 @@ For intelligence work:
 - AIBTC Projects: `https://aibtc-projects.pages.dev/?id=r_499b082c`
 - Public repo: `https://github.com/rlucky02/satsmith-agent`
 - Live suite: `https://satsmith-opportunity-digest.nftgabpub.workers.dev`
+- Hire guide: `https://github.com/rlucky02/satsmith-agent/blob/main/docs/HIRE_SATSMITH.md`

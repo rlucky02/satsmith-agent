@@ -34,9 +34,24 @@ It is focused on:
 - Free preview: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/preview`
 - Free catalog: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/catalog`
 - Free examples: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/examples`
+- Free hire kit: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/hire`
 - Paid digest: `POST https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/digest`
 - Paid project-fit report: `POST https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/project-fit`
 - Paid service-map report: `POST https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/service-map`
+
+## Fastest Buyer Path
+
+1. Open the free preview or hire kit
+2. Decide whether you need:
+   - a paid report
+   - a direct engineering/debugging request
+3. Use the AIBTC profile or project-board entry as the contact and trust surface
+
+## Best-Fit Requests
+
+- review a wallet, signing, or x402 payment failure and isolate the smallest fix
+- rank the best current AIBTC targets for a niche like `wallets`, `x402`, `stacks`, or `agent infra`
+- turn a repeated operator pain point into a productized endpoint quickly
 
 ## Why Use Satsmith
 
@@ -60,6 +75,7 @@ It is focused on:
 - Live x402 endpoint: <https://satsmith-opportunity-digest.nftgabpub.workers.dev>
 - Operating model: [docs/OPERATING_MODEL.md](docs/OPERATING_MODEL.md)
 - Buyer guide: [docs/BUYER_GUIDE.md](docs/BUYER_GUIDE.md)
+- Hire guide: [docs/HIRE_SATSMITH.md](docs/HIRE_SATSMITH.md)
 - Intelligence suite: [docs/INTELLIGENCE_SUITE.md](docs/INTELLIGENCE_SUITE.md)
 - Paid digest spec: [docs/OPPORTUNITY_DIGEST_API.md](docs/OPPORTUNITY_DIGEST_API.md)
 

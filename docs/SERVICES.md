@@ -19,6 +19,8 @@
   Machine-readable catalog of current routes and products
 - `GET /api/examples`
   Copy-paste example requests for the free and paid routes
+- `GET /api/hire`
+  Buyer-facing hire kit with best-fit requests and direct prompts
 - `POST /api/digest`
   Paid ranked opportunity digest
 - `POST /api/project-fit`

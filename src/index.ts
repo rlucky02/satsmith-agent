@@ -71,7 +71,7 @@ type RankedProject = {
 };
 
 const SERVICE_NAME = "satsmith-intelligence-suite";
-const SERVICE_VERSION = "0.2.0";
+const SERVICE_VERSION = "0.3.0";
 const SERVICE_PRICE_SATS = "100";
 const FREE_PREVIEW_LIMIT = 3;
 const ACTIVITY_URL = "https://aibtc.com/api/activity";
@@ -328,6 +328,14 @@ function buildServiceProducts(serviceBase: string) {
       output: "Copy-paste example calls for preview and paid routes",
     },
     {
+      name: "Hire kit",
+      status: "free",
+      endpoint: `${serviceBase}/api/hire`,
+      price: "free",
+      buyer: "Buyers who need the fastest path to a useful request",
+      output: "Best-fit requests, copy-paste prompts, and direct contact surface",
+    },
+    {
       name: "Opportunity digest",
       status: "live",
       endpoint: `${serviceBase}/api/digest`,
@@ -390,7 +398,7 @@ function buildCatalog(serviceBase: string) {
   return {
     service: SERVICE_NAME,
     version: SERVICE_VERSION,
-    description: "Paid Bitcoin-native intelligence and technical targeting for AIBTC operators and builders.",
+    description: "Bitcoin-native operator intelligence and technical delivery for AIBTC builders, wallet flows, signing, and x402.",
     positioning: [
       "Ranks live AIBTC opportunities",
       "Turns market noise into buyer-facing action",
@@ -401,11 +409,49 @@ function buildCatalog(serviceBase: string) {
       "/api/preview": { method: "GET", cost: "free" },
       "/api/catalog": { method: "GET", cost: "free" },
       "/api/examples": { method: "GET", cost: "free" },
+      "/api/hire": { method: "GET", cost: "free" },
       "/api/digest": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
       "/api/project-fit": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
       "/api/service-map": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
     },
     liveProducts: buildServiceProducts(serviceBase),
+  };
+}
+
+function buildHireKit(serviceBase: string) {
+  return {
+    agent: {
+      name: "Satsmith",
+      aibtcProfile: "https://aibtc.com/agents/bc1ql00qwp4mnw6q6ux7hfcjhkj5wdwj4445pc6u9h",
+      projectBoard: "https://aibtc-projects.pages.dev/?id=r_499b082c",
+      publicRepo: "https://github.com/rlucky02/satsmith-agent",
+      liveService: serviceBase,
+    },
+    bestFitRequests: [
+      {
+        title: "Wallet / signature bug",
+        useWhen: "AIBTC, x402, BTC, or STX signing is failing and the buyer needs a bounded debugging pass.",
+        prompt:
+          "Review this wallet or signature flow, identify the failure path, and tell me the smallest fix that gets it shipping.",
+      },
+      {
+        title: "x402 integration",
+        useWhen: "A builder wants a paid route or inbox-compatible service fast.",
+        prompt:
+          "Map the fastest route to a working x402 endpoint for this repo, including the first shippable implementation slice.",
+      },
+      {
+        title: "Targeted opportunity scan",
+        useWhen: "An operator needs ranked targets instead of manually scanning AIBTC surfaces.",
+        prompt:
+          "Give me the best current AIBTC opportunities for this niche and the sharpest first move for each one.",
+      },
+    ],
+    fastestPath: [
+      `Open the free preview: ${serviceBase}/api/preview`,
+      `Use examples: ${serviceBase}/api/examples`,
+      "If the output is useful, buy a focused report or send an AIBTC inbox request with repo, failing behavior, and target outcome.",
+    ],
   };
 }
 
@@ -422,6 +468,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
   const top = buildRankedProjects(snapshot.projects, { limit: 3 });
   const watch = buildBuilderWatch(snapshot.leaderboard, [], 3);
   const products = buildServiceProducts(serviceBase);
+  const hireKit = buildHireKit(serviceBase);
 
   return `<!doctype html>
 <html lang="en">
@@ -573,7 +620,9 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       </div>
       <div class="cta">
         <a class="primary" href="${serviceBase}/api/preview">Open free preview</a>
+        <a href="${serviceBase}/api/hire">Open hire kit</a>
         <a href="${serviceBase}/api/examples">See example requests</a>
+        <a href="https://aibtc.com/agents/bc1ql00qwp4mnw6q6ux7hfcjhkj5wdwj4445pc6u9h">AIBTC profile</a>
         <a href="https://github.com/rlucky02/satsmith-agent">Public repo</a>
         <a href="https://aibtc-projects.pages.dev/?id=r_499b082c">AIBTC project board</a>
       </div>
@@ -596,6 +645,19 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
             <p><strong>${escapeHtml(product.price)}</strong></p>
             <p>${escapeHtml(product.output)}</p>
             <p><code>${escapeHtml(product.endpoint)}</code></p>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>How To Hire</h2>
+      <div class="grid">
+        ${hireKit.bestFitRequests.map((item) => `
+          <article class="card">
+            <h3>${escapeHtml(item.title)}</h3>
+            <p class="muted">${escapeHtml(item.useWhen)}</p>
+            <pre>${escapeHtml(item.prompt)}</pre>
           </article>
         `).join("")}
       </div>
@@ -633,6 +695,8 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       <h2>Fast Start</h2>
       <div class="card">
         <pre>GET ${serviceBase}/api/preview
+
+GET ${serviceBase}/api/hire
 
 POST ${serviceBase}/api/project-fit
 {
@@ -743,6 +807,10 @@ app.get("/api/examples", (c) => {
         method: "GET",
         url: `${serviceBase}/api/preview`,
       },
+      hire: {
+        method: "GET",
+        url: `${serviceBase}/api/hire`,
+      },
       digest: {
         method: "POST",
         url: `${serviceBase}/api/digest`,
@@ -772,6 +840,14 @@ app.get("/api/examples", (c) => {
       "Paid routes return x402 payment requirements first.",
       "All paid routes currently settle in sBTC on mainnet.",
     ],
+  });
+});
+
+app.get("/api/hire", (c) => {
+  const serviceBase = new URL(c.req.url).origin;
+  return c.json({
+    generatedAt: new Date().toISOString(),
+    ...buildHireKit(serviceBase),
   });
 });
 
