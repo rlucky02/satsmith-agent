@@ -11,8 +11,14 @@
 
 ## Live Intelligence Suite
 
+- `/`
+  Browser-facing landing page for operators evaluating the suite
 - `GET /api/preview`
   Free snapshot of top opportunities, builder watch, and live products
+- `GET /api/catalog`
+  Machine-readable catalog of current routes and products
+- `GET /api/examples`
+  Copy-paste example requests for the free and paid routes
 - `POST /api/digest`
   Paid ranked opportunity digest
 - `POST /api/project-fit`

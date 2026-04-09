@@ -312,6 +312,22 @@ function buildServiceProducts(serviceBase: string) {
       output: "Top opportunities, builder watch, and live service catalog",
     },
     {
+      name: "Catalog",
+      status: "free",
+      endpoint: `${serviceBase}/api/catalog`,
+      price: "free",
+      buyer: "Integrators who need the current surface and routes",
+      output: "Machine-readable product catalog and endpoint metadata",
+    },
+    {
+      name: "Examples",
+      status: "free",
+      endpoint: `${serviceBase}/api/examples`,
+      price: "free",
+      buyer: "People who want ready-to-run request examples",
+      output: "Copy-paste example calls for preview and paid routes",
+    },
+    {
       name: "Opportunity digest",
       status: "live",
       endpoint: `${serviceBase}/api/digest`,
@@ -370,6 +386,274 @@ function buildSummary(snapshot: MarketSnapshot) {
   };
 }
 
+function buildCatalog(serviceBase: string) {
+  return {
+    service: SERVICE_NAME,
+    version: SERVICE_VERSION,
+    description: "Paid Bitcoin-native intelligence and technical targeting for AIBTC operators and builders.",
+    positioning: [
+      "Ranks live AIBTC opportunities",
+      "Turns market noise into buyer-facing action",
+      "Productizes technical operator work into reusable endpoints",
+    ],
+    endpoints: {
+      "/health": { method: "GET", cost: "free" },
+      "/api/preview": { method: "GET", cost: "free" },
+      "/api/catalog": { method: "GET", cost: "free" },
+      "/api/examples": { method: "GET", cost: "free" },
+      "/api/digest": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
+      "/api/project-fit": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
+      "/api/service-map": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
+    },
+    liveProducts: buildServiceProducts(serviceBase),
+  };
+}
+
+function escapeHtml(text: string) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
+  const top = buildRankedProjects(snapshot.projects, { limit: 3 });
+  const watch = buildBuilderWatch(snapshot.leaderboard, [], 3);
+  const products = buildServiceProducts(serviceBase);
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Satsmith Intelligence Suite</title>
+  <style>
+    :root {
+      --bg: #0f1218;
+      --panel: #171d27;
+      --panel-2: #1f2835;
+      --text: #eef3f8;
+      --muted: #9aa8b8;
+      --line: rgba(255,255,255,.08);
+      --gold: #f4b942;
+      --teal: #3ac0b7;
+      --blue: #7aa2ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background:
+        radial-gradient(circle at top left, rgba(122,162,255,.18), transparent 32%),
+        radial-gradient(circle at top right, rgba(58,192,183,.14), transparent 30%),
+        linear-gradient(180deg, #0c1016, #111723 55%, #0f1218);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 40px 20px 72px; }
+    .hero {
+      display: grid;
+      gap: 18px;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      box-shadow: 0 30px 80px rgba(0,0,0,.35);
+    }
+    .eyebrow {
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-size: 12px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(40px, 7vw, 76px);
+      line-height: .92;
+      font-weight: 600;
+    }
+    .sub {
+      max-width: 720px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.55;
+    }
+    .cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 6px;
+    }
+    .cta a {
+      display: inline-flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-radius: 999px;
+      text-decoration: none;
+      border: 1px solid var(--line);
+      color: var(--text);
+      background: rgba(255,255,255,.03);
+    }
+    .cta a.primary {
+      background: linear-gradient(135deg, rgba(244,185,66,.22), rgba(122,162,255,.18));
+      border-color: rgba(244,185,66,.35);
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .stat, .card {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 18px;
+      padding: 18px;
+    }
+    .stat strong {
+      display: block;
+      font-size: 28px;
+      margin-bottom: 4px;
+    }
+    .muted { color: var(--muted); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .section {
+      margin-top: 24px;
+    }
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 26px;
+    }
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      border: 1px solid var(--line);
+      color: var(--teal);
+    }
+    code {
+      color: #f7f9fb;
+      background: rgba(255,255,255,.05);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #dce7f5;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .footer {
+      margin-top: 28px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Satsmith Intelligence Suite</div>
+      <h1>Bitcoin-native operator intelligence, not generic chat.</h1>
+      <div class="sub">
+        Satsmith turns live AIBTC signals, project data, and builder movement into actionable targets, buyer-facing reports, and product ideas. Use the free preview first, then buy the exact report you need.
+      </div>
+      <div class="cta">
+        <a class="primary" href="${serviceBase}/api/preview">Open free preview</a>
+        <a href="${serviceBase}/api/examples">See example requests</a>
+        <a href="https://github.com/rlucky02/satsmith-agent">Public repo</a>
+        <a href="https://aibtc-projects.pages.dev/?id=r_499b082c">AIBTC project board</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><strong>${snapshot.activity.totalAgents.toLocaleString("en-US")}</strong><span class="muted">total agents</span></div>
+        <div class="stat"><strong>${snapshot.activity.activeAgents.toLocaleString("en-US")}</strong><span class="muted">active agents</span></div>
+        <div class="stat"><strong>${snapshot.activity.totalMessages.toLocaleString("en-US")}</strong><span class="muted">paid messages</span></div>
+        <div class="stat"><strong>${snapshot.activity.totalSatsTransacted.toLocaleString("en-US")}</strong><span class="muted">sats transacted</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Live Products</h2>
+      <div class="grid">
+        ${products.map((product) => `
+          <article class="card">
+            <div class="pill">${escapeHtml(product.status)}</div>
+            <h3>${escapeHtml(product.name)}</h3>
+            <p class="muted">${escapeHtml(product.buyer)}</p>
+            <p><strong>${escapeHtml(product.price)}</strong></p>
+            <p>${escapeHtml(product.output)}</p>
+            <p><code>${escapeHtml(product.endpoint)}</code></p>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Top Opportunities Right Now</h2>
+      <div class="grid">
+        ${top.map((project) => `
+          <article class="card">
+            <h3>${escapeHtml(project.title)}</h3>
+            <p class="muted">${escapeHtml(project.reason)}</p>
+            <p><strong>${escapeHtml(project.angle)}</strong></p>
+            <p>${escapeHtml(project.firstMove)}</p>
+            <p><code>score=${project.score}</code></p>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Builder Watch</h2>
+      <div class="grid">
+        ${watch.map((entry) => `
+          <article class="card">
+            <h3>${escapeHtml(entry.displayName)}</h3>
+            <p class="muted">${escapeHtml(entry.description)}</p>
+            <p><code>score=${entry.score}</code></p>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Fast Start</h2>
+      <div class="card">
+        <pre>GET ${serviceBase}/api/preview
+
+POST ${serviceBase}/api/project-fit
+{
+  "focus": "x402 wallet debug",
+  "limit": 3
+}
+
+POST ${serviceBase}/api/service-map
+{
+  "niche": "agent infra"
+}</pre>
+      </div>
+      <div class="footer">
+        Generated from live AIBTC and public project surfaces at ${escapeHtml(snapshot.generatedAt)}.
+      </div>
+    </section>
+  </div>
+</body>
+</html>`;
+}
+
 async function loadMarketSnapshot(): Promise<MarketSnapshot> {
   const [activityPayload, leaderboardPayload, projectsPayload, bountyPayload] = await Promise.all([
     fetchJson<{ stats?: { totalAgents?: number; activeAgents?: number; totalMessages?: number; totalSatsTransacted?: number } }>(ACTIVITY_URL),
@@ -410,25 +694,15 @@ function buildPayment(c: Context<{ Bindings: Bindings; Variables: Variables }>) 
   };
 }
 
-app.get("/", (c) => {
+app.get("/", async (c) => {
   const serviceBase = new URL(c.req.url).origin;
+  const accept = c.req.header("Accept") ?? "";
+  if (accept.includes("text/html")) {
+    const snapshot = await loadMarketSnapshot();
+    return c.html(renderLandingPage(snapshot, serviceBase));
+  }
   return c.json({
-    service: SERVICE_NAME,
-    version: SERVICE_VERSION,
-    description: "Paid Bitcoin-native intelligence and technical targeting for AIBTC operators and builders.",
-    positioning: [
-      "Ranks live AIBTC opportunities",
-      "Turns market noise into buyer-facing action",
-      "Productizes technical operator work into reusable endpoints",
-    ],
-    endpoints: {
-      "/health": { method: "GET", cost: "free" },
-      "/api/preview": { method: "GET", cost: "free" },
-      "/api/digest": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
-      "/api/project-fit": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
-      "/api/service-map": { method: "POST", cost: `${SERVICE_PRICE_SATS} sats (sBTC)` },
-    },
-    liveProducts: buildServiceProducts(serviceBase),
+    ...buildCatalog(serviceBase),
     recipient: c.env.RECIPIENT_ADDRESS ? "configured" : "missing",
   });
 });
@@ -452,6 +726,52 @@ app.get("/api/preview", async (c) => {
     builderWatch: buildBuilderWatch(snapshot.leaderboard, [], FREE_PREVIEW_LIMIT),
     liveProducts: buildServiceProducts(serviceBase),
     sources: [ACTIVITY_URL, LEADERBOARD_URL, PROJECTS_URL, BOUNTY_STATS_URL],
+  });
+});
+
+app.get("/api/catalog", (c) => {
+  const serviceBase = new URL(c.req.url).origin;
+  return c.json(buildCatalog(serviceBase));
+});
+
+app.get("/api/examples", (c) => {
+  const serviceBase = new URL(c.req.url).origin;
+  return c.json({
+    generatedAt: new Date().toISOString(),
+    examples: {
+      preview: {
+        method: "GET",
+        url: `${serviceBase}/api/preview`,
+      },
+      digest: {
+        method: "POST",
+        url: `${serviceBase}/api/digest`,
+        body: {
+          limit: 5,
+          filter: "stacks",
+        },
+      },
+      projectFit: {
+        method: "POST",
+        url: `${serviceBase}/api/project-fit`,
+        body: {
+          focus: "x402 wallet debug",
+          limit: 3,
+        },
+      },
+      serviceMap: {
+        method: "POST",
+        url: `${serviceBase}/api/service-map`,
+        body: {
+          niche: "agent infra",
+        },
+      },
+    },
+    notes: [
+      "Preview and catalog are free.",
+      "Paid routes return x402 payment requirements first.",
+      "All paid routes currently settle in sBTC on mainnet.",
+    ],
   });
 });
 

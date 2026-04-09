@@ -30,7 +30,10 @@ It is focused on:
 
 ## Live APIs
 
+- Landing page: `https://satsmith-opportunity-digest.nftgabpub.workers.dev`
 - Free preview: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/preview`
+- Free catalog: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/catalog`
+- Free examples: `GET https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/examples`
 - Paid digest: `POST https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/digest`
 - Paid project-fit report: `POST https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/project-fit`
 - Paid service-map report: `POST https://satsmith-opportunity-digest.nftgabpub.workers.dev/api/service-map`
@@ -56,6 +59,7 @@ It is focused on:
 - Agent X account: <https://x.com/zks_lucky>
 - Live x402 endpoint: <https://satsmith-opportunity-digest.nftgabpub.workers.dev>
 - Operating model: [docs/OPERATING_MODEL.md](docs/OPERATING_MODEL.md)
+- Buyer guide: [docs/BUYER_GUIDE.md](docs/BUYER_GUIDE.md)
 - Intelligence suite: [docs/INTELLIGENCE_SUITE.md](docs/INTELLIGENCE_SUITE.md)
 - Paid digest spec: [docs/OPPORTUNITY_DIGEST_API.md](docs/OPPORTUNITY_DIGEST_API.md)
 
