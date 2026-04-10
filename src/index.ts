@@ -1651,6 +1651,9 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       border-bottom:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
       transition:transform .24s ease, background .24s ease, box-shadow .24s ease;
+      display:grid;
+      align-content:start;
+      gap:12px;
     }
     .command-tile:hover {
       transform:translate(-6px, -6px);
@@ -1666,7 +1669,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     .command-tile span {
       display:block;
       max-width:24ch;
-      margin-top:12px;
+      margin-top:0;
       font:500 12px/1.76 "IBM Plex Mono", ui-monospace, monospace;
       color:var(--text-1);
     }
@@ -1711,6 +1714,9 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       border:1px solid rgba(255,255,255,.08);
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
       transition:transform .28s ease, border-color .28s ease, background .28s ease;
+      display:grid;
+      align-content:start;
+      gap:12px;
     }
     .rail-card:hover {
       transform:translateX(8px);
@@ -1718,7 +1724,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       background:rgba(128,216,255,.05);
     }
     .rail-card p {
-      margin-top:12px;
+      margin-top:0;
       color:#d7e0ec;
       font:400 18px/1.12 "Instrument Serif", serif;
     }
@@ -1808,9 +1814,12 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       padding:42px 30px 34px;
       border-right:1px solid var(--line);
       background:linear-gradient(180deg, rgba(8,12,17,.96), rgba(8,12,17,.82));
+      display:grid;
+      align-content:start;
+      gap:16px;
     }
     .section-label p {
-      margin-top:16px;
+      margin-top:0;
       max-width:16ch;
       color:#cbd5e1;
       font:400 22px/1.1 "Instrument Serif", serif;
@@ -1833,6 +1842,11 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       border:1px solid var(--line);
       overflow:hidden;
       transition:transform .6s var(--ease), opacity .5s ease, border-color .25s ease;
+    }
+    .lane-card > div:first-child {
+      display:grid;
+      align-content:start;
+      gap:12px;
     }
     .lane-card::before {
       content:"";
@@ -1864,7 +1878,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     .lane-card.is-visible { transform:translate3d(0,0,0) rotate(0); }
     .lane-card .tag { background:rgba(255,255,255,.03); }
     .lane-card p {
-      margin-top:12px;
+      margin-top:0;
       max-width:40rem;
       color:var(--text-1);
       font:400 20px/1.08 "Instrument Serif", serif;
@@ -1905,6 +1919,9 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
       box-shadow:0 24px 80px rgba(0,0,0,.26);
       transition:transform .26s ease, border-color .26s ease, box-shadow .26s ease;
+      display:grid;
+      align-content:start;
+      gap:12px;
     }
     .target-card:nth-child(2) { margin-left:34px; }
     .target-card:nth-child(3) { margin-left:68px; }
@@ -1914,7 +1931,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       box-shadow:0 32px 90px rgba(0,0,0,.34);
     }
     .target-card p {
-      margin-top:14px;
+      margin-top:0;
       max-width:38rem;
       color:#dce6f2;
       font:400 20px/1.1 "Instrument Serif", serif;
@@ -1923,7 +1940,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       display:flex;
       flex-wrap:wrap;
       gap:10px;
-      margin-top:18px;
+      margin-top:0;
       font:600 10px/1.4 "IBM Plex Mono", ui-monospace, monospace;
       letter-spacing:.18em;
       text-transform:uppercase;
@@ -1936,9 +1953,12 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     .watch-head {
       padding:30px 24px;
       border-bottom:1px solid var(--line);
+      display:grid;
+      align-content:start;
+      gap:14px;
     }
     .watch-head p {
-      margin-top:14px;
+      margin-top:0;
       color:#d8e1ed;
       font:400 20px/1.08 "Instrument Serif", serif;
     }
@@ -1946,11 +1966,14 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       padding:22px 24px 24px;
       border-bottom:1px solid rgba(255,255,255,.08);
       transition:background .24s ease, transform .24s ease;
+      display:grid;
+      align-content:start;
+      gap:12px;
     }
     .watch-row:hover { background:rgba(128,216,255,.05); transform:translateX(8px); }
     .watch-row:last-child { border-bottom:none; }
     .watch-row p {
-      margin-top:12px;
+      margin-top:0;
       color:var(--text-1);
       font:400 18px/1.12 "Instrument Serif", serif;
     }
@@ -1973,6 +1996,12 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       box-shadow:0 24px 80px rgba(0,0,0,.22);
       transition:transform .55s var(--ease), opacity .45s ease, box-shadow .22s ease;
     }
+    .prompt-side,
+    .prompt-copy {
+      display:grid;
+      align-content:start;
+      gap:12px;
+    }
     .prompt-card:nth-child(odd) { transform:translateX(42px); }
     .prompt-card:nth-child(even) { transform:translateX(-30px); }
     .prompt-card.is-visible { transform:translateX(0); }
@@ -1984,7 +2013,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       letter-spacing:.22em;
       text-transform:uppercase;
     }
-    .prompt-side h3 { margin-top:12px; }
+    .prompt-side h3 { margin-top:0; }
     .prompt-copy p {
       color:#d6e0ec;
       font:400 20px/1.1 "Instrument Serif", serif;
@@ -2006,9 +2035,12 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       padding:30px 30px 32px;
       border:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      display:grid;
+      align-content:start;
+      gap:14px;
     }
     .console p, .console .foot {
-      margin-top:14px;
+      margin-top:0;
       color:var(--text-1);
       font:500 12px/1.75 "IBM Plex Mono", ui-monospace, monospace;
     }
@@ -2022,6 +2054,9 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       border:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
       transition:transform .24s ease, border-color .24s ease, background .24s ease;
+      display:grid;
+      align-content:start;
+      gap:12px;
     }
     .discovery-link:hover {
       transform:translate(8px, -6px);
@@ -2030,7 +2065,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     }
     .discovery-link span {
       display:block;
-      margin-top:10px;
+      margin-top:0;
       color:var(--text-1);
       font:500 12px/1.72 "IBM Plex Mono", ui-monospace, monospace;
     }
@@ -2044,6 +2079,9 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       position:relative;
       padding:34px clamp(24px, 4vw, 64px);
       border-right:1px solid var(--line);
+      display:grid;
+      align-content:start;
+      gap:16px;
     }
     .exit-copy::after {
       content:"RESOLVE";
@@ -2057,16 +2095,19 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       position:relative;
       z-index:1;
       max-width:34rem;
-      margin-top:18px;
+      margin-top:0;
       color:#dce4ef;
       font:400 22px/1.08 "Instrument Serif", serif;
     }
     .exit-call {
       padding:34px 28px;
       background:linear-gradient(180deg, rgba(255,107,66,.22), rgba(255,107,66,.12));
+      display:grid;
+      align-content:start;
+      gap:14px;
     }
     .exit-call p {
-      margin-top:14px;
+      margin-top:0;
       color:#ffe4dd;
       font:500 12px/1.8 "IBM Plex Mono", ui-monospace, monospace;
     }
