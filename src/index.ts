@@ -1329,14 +1329,26 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
   const freeProducts = products.filter((product) => product.status === "free");
   const paidProducts = products.filter((product) => product.status !== "free");
   const routeBands = [
-    ...freeProducts.map((product) => ({ ...product, tag: "Free route", tone: "paper" as const })),
-    ...paidProducts.map((product) => ({ ...product, tag: "Paid x402", tone: "void" as const })),
+    ...freeProducts.map((product) => ({ ...product, tag: "Open lane", tone: "open" as const })),
+    ...paidProducts.map((product) => ({ ...product, tag: "Paid lane", tone: "paid" as const })),
   ];
-  const buyerPrompts = hireKit.bestFitRequests.slice(0, 3);
+  const buyerPrompts = hireKit.bestFitRequests.slice(0, 4);
   const discoveryLinks = [
-    { title: "llms.txt", href: `${serviceBase}/llms.txt`, detail: "Readable route summary for agents and autonomous clients." },
-    { title: "OpenAPI", href: `${serviceBase}/openapi.json`, detail: "Structured schema for wrappers, plugins, and tool use." },
+    { title: "llms.txt", href: `${serviceBase}/llms.txt`, detail: "Readable route summary for autonomous clients and agents." },
+    { title: "OpenAPI", href: `${serviceBase}/openapi.json`, detail: "Structured schema for wrappers, plugins, and protocol-aware tooling." },
     { title: "AI Plugin", href: `${serviceBase}/.well-known/ai-plugin.json`, detail: "Manifest that points external runtimes at the live schema." },
+  ];
+  const vaultMetrics = [
+    { value: summary.totalAgents.toLocaleString("en-US"), label: "Vault entries" },
+    { value: summary.activeAgents.toLocaleString("en-US"), label: "Live operators" },
+    { value: summary.totalMessages.toLocaleString("en-US"), label: "Paid exchanges" },
+    { value: summary.totalSatsTransacted.toLocaleString("en-US"), label: "Sats routed" },
+  ];
+  const railRoutes = [freeProducts[4], freeProducts[5], paidProducts[1]].filter(Boolean);
+  const chamberNotes = [
+    { label: "Open bounties", value: String(summary.openBounties) },
+    { label: "Public payout", value: `${summary.publicBountyPayoutSats.toLocaleString("en-US")} sats` },
+    { label: "Project board", value: `${snapshot.projects.length.toLocaleString("en-US")} live records` },
   ];
 
   return `<!doctype html>
@@ -1344,389 +1356,907 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Satsmith | Operator Intelligence for AIBTC</title>
+  <title>Satsmith | Vault Protocol Command Center</title>
   <style>
-    @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Syne:wght@500;700;800&display=swap");
-    :root { --paper:#f5efe4; --paper-soft:#fcf7ef; --paper-deep:#e3d8c8; --ink:#11110f; --muted:#5f594f; --line:#13120f; --red:#d93b23; --red-soft:#ff7952; --blue:#8ea7ff; --gold:#f0c876; --void:#0d1014; --void-soft:#171b22; --chalk:#fff9f1; }
+    @import url("https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap");
+    :root {
+      --bg-0:#06080c;
+      --bg-1:#0b1016;
+      --bg-2:#101720;
+      --bg-3:#151f2b;
+      --panel:#0e141d;
+      --panel-soft:rgba(255,255,255,.03);
+      --line:rgba(173,204,255,.16);
+      --line-strong:rgba(255,255,255,.18);
+      --text-0:#f4f7fb;
+      --text-1:#aeb9c8;
+      --text-2:#718196;
+      --cyan:#80d8ff;
+      --cyan-soft:rgba(128,216,255,.18);
+      --cyan-fog:rgba(128,216,255,.10);
+      --ember:#ff6b42;
+      --ember-soft:rgba(255,107,66,.16);
+      --gold:#ffd36a;
+      --shadow:0 40px 120px rgba(0,0,0,.46);
+      --ease:cubic-bezier(.22,1,.36,1);
+    }
     * { box-sizing:border-box; }
     html { scroll-behavior:smooth; }
-    body { margin:0; color:var(--ink); font-family:"Syne",sans-serif; min-height:100vh; background:radial-gradient(circle at 10% 12%, rgba(217,59,35,.2), transparent 22%), radial-gradient(circle at 88% 14%, rgba(142,167,255,.18), transparent 18%), radial-gradient(circle at 56% 76%, rgba(240,200,118,.12), transparent 20%), linear-gradient(180deg,#faf4e8 0%,#ede3d2 58%,#f4ede0 100%); scroll-snap-type:y proximity; }
-    body::before { content:""; position:fixed; inset:0; pointer-events:none; background:linear-gradient(rgba(17,17,15,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(17,17,15,.04) 1px, transparent 1px); background-size:76px 76px; opacity:.34; mask-image:linear-gradient(180deg, rgba(0,0,0,.94), rgba(0,0,0,.56) 72%, transparent 100%); }
-    body::after { content:""; position:fixed; inset:0; pointer-events:none; background:radial-gradient(circle at center, transparent 58%, rgba(0,0,0,.1) 100%), linear-gradient(180deg, rgba(255,255,255,.28), transparent 16%, transparent 84%, rgba(0,0,0,.08)); mix-blend-mode:multiply; opacity:.72; }
+    body {
+      margin:0;
+      color:var(--text-0);
+      font-family:"Big Shoulders Display", sans-serif;
+      background:
+        radial-gradient(circle at 16% 14%, rgba(128,216,255,.12), transparent 20%),
+        radial-gradient(circle at 82% 18%, rgba(255,107,66,.09), transparent 18%),
+        radial-gradient(circle at 50% 52%, rgba(255,255,255,.03), transparent 34%),
+        linear-gradient(180deg, #05070a 0%, #091019 28%, #06090f 100%);
+      min-height:100vh;
+    }
+    body::before {
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(rgba(128,216,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(128,216,255,.05) 1px, transparent 1px);
+      background-size:96px 96px;
+      opacity:.28;
+      mask-image:linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,.4) 72%, transparent 100%);
+    }
+    body::after {
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:radial-gradient(circle at center, transparent 58%, rgba(0,0,0,.46) 100%);
+      opacity:.8;
+    }
     a { color:inherit; text-decoration:none; }
-    .wrap { width:min(1660px, calc(100vw - 44px)); margin:0 auto; padding:22px 0 96px; }
-    .paper { position:relative; overflow:hidden; border:1.5px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,.58), rgba(255,255,255,.2)), var(--paper); box-shadow:0 28px 120px rgba(17,15,12,.18); }
-    .paper::before { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(110deg, rgba(217,59,35,.07), transparent 18%), linear-gradient(300deg, rgba(142,167,255,.08), transparent 22%), radial-gradient(circle at 74% 16%, rgba(255,255,255,.34), transparent 24%); }
-    .paper::after { content:""; position:absolute; inset:0; pointer-events:none; background-image:linear-gradient(rgba(17,17,15,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(17,17,15,.03) 1px, transparent 1px); background-size:148px 148px; opacity:.24; }
-    .progress { position:fixed; left:26px; bottom:26px; z-index:60; display:grid; gap:8px; }
-    .progress a { display:flex; align-items:center; gap:12px; color:rgba(17,17,15,.46); font:600 10px/1 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.22em; text-transform:uppercase; transition:color .22s ease, transform .22s ease; }
-    .progress a::before { content:""; width:9px; height:9px; border:1px solid currentColor; background:transparent; transition:background .22s ease, transform .22s ease; }
-    .progress a::after { content:""; width:34px; height:1px; background:currentColor; opacity:.6; }
-    .progress a.active { color:var(--line); transform:translateX(6px); }
-    .progress a.active::before { background:var(--red); border-color:var(--red); transform:scale(1.2); }
-    .ticker { position:relative; z-index:2; display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); border-bottom:1.5px solid var(--line); background:rgba(255,249,241,.78); backdrop-filter:blur(12px); }
-    .ticker div { padding:14px 18px 13px; border-right:1.5px solid var(--line); font:600 10px/1.5 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.22em; text-transform:uppercase; }
-    .ticker div:last-child { border-right:none; }
-    .ticker strong { display:block; margin-bottom:4px; color:var(--red); }
-    .cover { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0, 1.24fr) minmax(340px, .76fr); min-height:102svh; border-bottom:1.5px solid var(--line); }
-    .cover::before { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(90deg, transparent 0 62%, rgba(13,16,20,.97) 62% 100%), linear-gradient(180deg, transparent 0 80%, rgba(17,17,15,.08) 80% 100%); }
-    .cover-copy { position:relative; padding:34px clamp(24px, 4vw, 60px) 28px; border-right:1.5px solid var(--line); display:grid; grid-template-rows:auto 1fr auto auto; }
-    .cover-copy::before { content:"ISSUE"; position:absolute; right:14%; bottom:30%; font:italic 400 clamp(76px, 9vw, 144px)/.82 "Instrument Serif",serif; letter-spacing:-.04em; color:rgba(17,17,15,.05); transform:rotate(-4deg); pointer-events:none; }
-    .cover-copy::after { content:""; position:absolute; right:8%; top:12%; width:min(36vw, 460px); height:min(30vw, 360px); border:1.5px solid rgba(17,17,15,.16); border-radius:999px; transform:rotate(-14deg); background:radial-gradient(circle at center, rgba(217,59,35,.12), transparent 68%); pointer-events:none; }
-    .cover-trace { position:absolute; left:clamp(28px, 4vw, 62px); bottom:7%; width:min(58vw, 840px); height:min(44vh, 420px); pointer-events:none; opacity:.9; }
-    .cover-trace path { fill:none; stroke-linecap:round; stroke-linejoin:round; }
-    .cover-trace .trace-back { stroke:rgba(17,17,15,.08); stroke-width:14; }
-    .cover-trace .trace-front { stroke:var(--red); stroke-width:4; stroke-dasharray:1200; stroke-dashoffset:1200; animation:draw 3s cubic-bezier(.22,1,.36,1) .2s forwards; }
-    .cover-trace .trace-node { fill:var(--chalk); stroke:var(--line); stroke-width:2; }
-    .eyebrow, .route-tag, .list-tag, .metric-label { display:inline-flex; align-items:center; justify-content:center; padding:8px 12px; border:1px solid currentColor; font:600 10px/1 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.2em; text-transform:uppercase; }
-    .eyebrow { width:max-content; color:var(--red); background:rgba(255,249,241,.72); }
-    .stamp { display:inline-flex; align-items:center; justify-content:center; padding:12px 14px; background:var(--line); color:var(--chalk); font:600 10px/1 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.22em; text-transform:uppercase; border:1px solid var(--line); box-shadow:12px 12px 0 rgba(217,59,35,.15); }
-    .cover-top { position:relative; z-index:1; display:flex; justify-content:space-between; gap:18px; align-items:flex-start; }
-    h1, h2, h3 { margin:0; letter-spacing:-.05em; }
-    h1 { position:relative; z-index:1; margin-top:38px; font:800 clamp(60px, 8.2vw, 136px)/.84 "Syne",sans-serif; text-transform:uppercase; }
-    h2 { font:800 clamp(36px, 4.6vw, 72px)/.9 "Syne",sans-serif; text-transform:uppercase; }
-    h3 { font:700 clamp(24px, 2.2vw, 34px)/.94 "Syne",sans-serif; text-transform:uppercase; }
+    .shell {
+      width:min(1700px, calc(100vw - 36px));
+      margin:0 auto;
+      padding:18px 0 96px;
+    }
+    .progress {
+      position:fixed;
+      top:50%;
+      right:20px;
+      z-index:80;
+      display:grid;
+      gap:10px;
+      transform:translateY(-50%);
+    }
+    .progress a {
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:10px;
+      color:rgba(244,247,251,.36);
+      font:600 10px/1 "IBM Plex Mono", ui-monospace, monospace;
+      letter-spacing:.2em;
+      text-transform:uppercase;
+      transition:color .24s ease, transform .24s ease;
+    }
+    .progress a::after {
+      content:"";
+      width:34px;
+      height:1px;
+      background:currentColor;
+      opacity:.75;
+      transition:transform .24s ease;
+      transform-origin:right center;
+    }
+    .progress a.active {
+      color:var(--cyan);
+      transform:translateX(-8px);
+    }
+    .progress a.active::after {
+      transform:scaleX(1.8);
+    }
+    .deck {
+      position:relative;
+      overflow:hidden;
+      border:1px solid rgba(173,204,255,.14);
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(12px);
+    }
+    .deck::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:linear-gradient(180deg, rgba(128,216,255,.03), transparent 26%, transparent 72%, rgba(255,107,66,.03));
+    }
+    .topline {
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      border-bottom:1px solid var(--line);
+      background:rgba(5,9,14,.84);
+      backdrop-filter:blur(14px);
+      position:sticky;
+      top:0;
+      z-index:40;
+    }
+    .topline div {
+      padding:14px 18px;
+      border-right:1px solid var(--line);
+      font:600 10px/1.55 "IBM Plex Mono", ui-monospace, monospace;
+      letter-spacing:.2em;
+      text-transform:uppercase;
+      color:var(--text-1);
+    }
+    .topline div:last-child { border-right:none; }
+    .topline strong { display:block; margin-bottom:4px; color:var(--text-0); }
+    .topline .accent { color:var(--cyan); }
+    .section, .hero { scroll-snap-align:start; }
+    .hero {
+      position:relative;
+      display:grid;
+      grid-template-columns:minmax(0, 1.16fr) minmax(360px, .84fr);
+      min-height:100svh;
+      background:
+        radial-gradient(circle at 28% 34%, rgba(128,216,255,.10), transparent 30%),
+        linear-gradient(90deg, rgba(6,9,13,.82) 0 64%, rgba(11,16,22,.98) 64% 100%);
+    }
+    .hero-copy {
+      position:relative;
+      padding:34px clamp(24px, 4vw, 64px) 28px;
+      border-right:1px solid var(--line);
+      display:grid;
+      grid-template-rows:auto 1fr auto auto;
+    }
+    .hero-copy::before {
+      content:"VAULT";
+      position:absolute;
+      left:clamp(18px, 2vw, 34px);
+      bottom:4%;
+      font:italic 400 clamp(78px, 8vw, 168px)/.84 "Instrument Serif", serif;
+      letter-spacing:-.04em;
+      color:rgba(255,255,255,.05);
+      pointer-events:none;
+    }
+    .hero-copy::after {
+      content:"";
+      position:absolute;
+      inset:18% 12% auto auto;
+      width:min(44vw, 620px);
+      height:min(44vw, 620px);
+      border-radius:50%;
+      border:1px solid rgba(128,216,255,.12);
+      box-shadow:0 0 0 70px rgba(128,216,255,.03), 0 0 0 150px rgba(255,255,255,.015);
+      pointer-events:none;
+    }
+    .kicker, .tag, .micro {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:max-content;
+      padding:8px 12px;
+      border:1px solid currentColor;
+      font:600 10px/1 "IBM Plex Mono", ui-monospace, monospace;
+      letter-spacing:.2em;
+      text-transform:uppercase;
+    }
+    .kicker { color:var(--cyan); background:rgba(128,216,255,.05); }
+    .tag { color:var(--gold); background:rgba(255,211,106,.06); }
+    .hero-bar {
+      position:relative;
+      z-index:2;
+      display:flex;
+      justify-content:space-between;
+      gap:18px;
+      align-items:flex-start;
+    }
+    h1, h2, h3 { margin:0; text-transform:uppercase; letter-spacing:-.04em; }
+    h1 {
+      position:relative;
+      z-index:2;
+      max-width:8.1ch;
+      margin-top:34px;
+      font:900 clamp(86px, 12vw, 188px)/.78 "Big Shoulders Display", sans-serif;
+    }
+    h2 { font:800 clamp(38px, 5vw, 82px)/.9 "Big Shoulders Display", sans-serif; }
+    h3 { font:800 clamp(26px, 2.3vw, 38px)/.92 "Big Shoulders Display", sans-serif; }
     p { margin:0; }
-    .deck { position:relative; z-index:1; max-width:620px; margin-top:24px; font:400 clamp(24px, 2.15vw, 32px)/1.08 "Instrument Serif",serif; color:#191712; }
-    .subdeck { position:relative; z-index:1; max-width:620px; margin-top:18px; font:500 13px/1.82 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.03em; color:#4d483f; }
-    .stats-strip { position:relative; z-index:1; display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); margin-top:44px; border-top:1.5px solid var(--line); }
-    .metric { padding:22px 14px 24px; border-right:1.5px solid var(--line); border-bottom:1.5px solid var(--line); background:rgba(255,249,241,.46); }
-    .metric:last-child { border-right:none; }
-    .metric strong { display:block; font:800 clamp(38px, 4vw, 64px)/.88 "Syne",sans-serif; }
-    .metric-label { margin-top:10px; color:var(--muted); width:max-content; background:rgba(17,17,15,.04); }
-    .action-row { position:relative; z-index:1; display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); margin-top:18px; border-left:1.5px solid var(--line); }
-    .action { min-height:152px; padding:24px 22px 20px; border-right:1.5px solid var(--line); border-bottom:1.5px solid var(--line); background:rgba(255,249,241,.48); transition:transform .24s ease, background .24s ease, color .24s ease, box-shadow .24s ease; }
-    .action:nth-child(2), .action:nth-child(3) { background:#f2e6d5; }
-    .action:nth-child(4) { background:#ebdfcf; }
-    .action:hover { transform:translate(-6px, -6px); box-shadow:10px 10px 0 rgba(17,17,15,.9); background:var(--line); color:var(--chalk); }
-    .action strong { display:block; max-width:12ch; font:700 28px/.92 "Syne",sans-serif; text-transform:uppercase; }
-    .action span { display:block; max-width:24ch; margin-top:14px; font:500 12px/1.75 "IBM Plex Mono",ui-monospace,monospace; opacity:.9; }
-    .issue-note { position:relative; z-index:1; display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); }
-    .issue-note span { padding:12px 14px; border-right:1.5px solid var(--line); border-bottom:1.5px solid var(--line); font:600 10px/1.45 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.22em; text-transform:uppercase; background:rgba(255,249,241,.72); }
-    .issue-note span:nth-child(2n) { border-right:none; }
-    .tower { position:relative; display:grid; grid-template-rows:auto auto 1fr auto; background:linear-gradient(180deg, rgba(13,16,20,.98), rgba(21,25,31,.98)); color:var(--chalk); }
-    .tower::before { content:"FIELD"; position:absolute; right:8px; top:54px; font:italic 400 clamp(68px, 8vw, 128px)/.84 "Instrument Serif",serif; color:rgba(255,255,255,.08); transform:rotate(-90deg) translateX(-34%); transform-origin:right top; pointer-events:none; }
-    .tower > * { padding:30px 28px 0; }
-    .tower h2 { max-width:8ch; color:#fff5e8; }
-    .tower p { color:#c1b6a6; }
-    .tower-stack { margin-top:28px; display:grid; gap:16px; padding-bottom:16px; }
-    .tower-card { padding:22px 22px 24px; border:1px solid rgba(255,255,255,.11); background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); }
-    .tower-card strong { display:block; margin-bottom:12px; color:var(--gold); font:600 10px/1.2 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.22em; text-transform:uppercase; }
-    .tower-card h3 { color:#fff7ed; max-width:12ch; }
-    .tower-card p { margin-top:12px; font:400 18px/1.16 "Instrument Serif",serif; color:#e5d8c9; }
-    .tower-card code, .route-band code, .prompt-card code, .console pre, .discovery a code { display:inline-block; margin-top:16px; padding:10px 12px; font:500 12px/1.58 "IBM Plex Mono",ui-monospace,monospace; border:1px solid currentColor; word-break:break-word; background:rgba(255,255,255,.03); }
-    .tower-links { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); margin:28px; border:1px solid rgba(255,255,255,.14); }
-    .tower-links a { padding:18px 16px; border-right:1px solid rgba(255,255,255,.14); transition:background .2s ease, transform .2s ease; }
-    .tower-links a:hover { background:rgba(255,255,255,.05); transform:translateY(-3px); }
-    .tower-links a:last-child { border-right:none; }
-    .tower-links strong { display:block; font:700 22px/.94 "Syne",sans-serif; text-transform:uppercase; }
-    .tower-links span { display:block; margin-top:8px; color:#bfb29f; font:500 12px/1.68 "IBM Plex Mono",ui-monospace,monospace; }
-    .tower-foot { margin:28px; padding:18px; border:1px solid rgba(255,255,255,.18); background:linear-gradient(135deg, rgba(217,59,35,.18), rgba(240,200,118,.12)); }
-    .tower-foot strong { display:block; color:#fff1cc; font:600 10px/1.1 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.22em; text-transform:uppercase; }
-    .tower-foot p { margin-top:10px; font:400 clamp(28px, 2.8vw, 42px)/.94 "Instrument Serif",serif; color:#fff7ee; }
-    .scene, .cover, .closing { scroll-snap-align:start; }
-    .scene { position:relative; z-index:1; border-top:1.5px solid var(--line); }
-    .scene:nth-of-type(odd) { background:rgba(255,249,241,.54); }
-    .scene-head { display:grid; grid-template-columns:340px minmax(0, 1fr); }
-    .scene-label { padding:28px 24px; border-right:1.5px solid var(--line); background:linear-gradient(180deg, rgba(255,249,241,.64), rgba(242,231,214,.7)); }
-    .scene-label p { margin-top:18px; color:var(--muted); font:400 18px/1.18 "Instrument Serif",serif; max-width:14ch; }
-    .scene-body { min-width:0; }
-    .bands { display:grid; gap:18px; padding:24px; }
-    .route-band { position:relative; display:grid; grid-template-columns:minmax(0, 1.2fr) 180px 220px; align-items:end; gap:24px; min-height:164px; padding:26px 26px 24px; border:1.5px solid var(--line); transition:transform .7s cubic-bezier(.22,1,.36,1), opacity .55s ease, filter .55s ease, box-shadow .3s ease; }
-    .route-band::after { content:""; position:absolute; inset:auto 24px 24px auto; width:96px; height:1px; background:currentColor; opacity:.35; }
-    .route-band:nth-child(odd) { transform:translate3d(56px, 0, 0) rotate(-1.4deg); }
-    .route-band:nth-child(even) { transform:translate3d(-36px, 0, 0) rotate(.95deg); }
-    .route-band.paper { background:#fbf6ee; color:var(--ink); box-shadow:16px 16px 0 rgba(17,17,15,.08); }
-    .route-band.void { background:linear-gradient(180deg, var(--void), var(--void-soft)); color:var(--chalk); box-shadow:18px 18px 0 rgba(17,17,15,.18); }
-    .route-band.is-visible { transform:translate3d(0,0,0) rotate(0); }
-    .route-band .route-tag { width:max-content; background:rgba(17,17,15,.05); }
-    .route-band.paper .route-tag { color:var(--red); }
-    .route-band.void .route-tag { color:var(--gold); background:rgba(255,255,255,.05); }
-    .route-band .route-meta { font:600 10px/1.5 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.2em; text-transform:uppercase; opacity:.72; }
-    .route-band .route-price { justify-self:end; font:700 28px/.92 "Syne",sans-serif; text-transform:uppercase; }
-    .pressure { display:grid; grid-template-columns:minmax(0, 1fr) 390px; }
-    .pressure-main { padding:24px; border-right:1.5px solid var(--line); display:grid; gap:18px; }
-    .pressure-main .feature { padding:28px 28px 30px; border:1.5px solid var(--line); background:rgba(255,249,241,.5); box-shadow:16px 16px 0 rgba(17,17,15,.08); transition:transform .65s cubic-bezier(.22,1,.36,1), opacity .5s ease, filter .5s ease, box-shadow .3s ease; }
-    .pressure-main .feature:nth-child(2) { margin-left:34px; background:#f2e7d7; }
-    .pressure-main .feature:nth-child(3) { margin-left:68px; background:#ebdece; }
-    .pressure-main .feature:hover { transform:translate(-8px, -8px); box-shadow:20px 20px 0 rgba(17,17,15,.15); }
-    .feature p { margin-top:14px; max-width:36rem; color:var(--muted); font:400 18px/1.2 "Instrument Serif",serif; }
-    .meta { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; font:600 10px/1.3 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); }
-    .pressure-rail { background:linear-gradient(180deg, var(--void), #0f1318); color:var(--chalk); }
-    .pressure-rail .rail-head { padding:28px 26px; border-bottom:1px solid rgba(255,255,255,.12); }
-    .pressure-rail .rail-head p { margin-top:14px; color:#d2c6b6; font:400 18px/1.18 "Instrument Serif",serif; }
-    .watch-item { padding:22px 26px 24px; border-bottom:1px solid rgba(255,255,255,.12); transition:transform .55s cubic-bezier(.22,1,.36,1), opacity .45s ease, background .25s ease; }
-    .watch-item:hover { transform:translateX(8px); background:rgba(255,255,255,.03); }
-    .watch-item:last-child { border-bottom:none; }
-    .watch-item p { margin-top:12px; color:#cfc3b3; font:400 18px/1.16 "Instrument Serif",serif; }
-    .watch-item .meta { color:var(--gold); }
-    .prompts { display:grid; grid-template-columns:370px minmax(0, 1fr); }
-    .prompt-intro { position:relative; padding:30px 26px; border-right:1.5px solid var(--line); background:linear-gradient(180deg, #ded2bf, #f4ebdd); }
-    .prompt-intro::after { content:"BUYER"; position:absolute; left:18px; bottom:22px; font:italic 400 clamp(72px, 7vw, 120px)/.86 "Instrument Serif",serif; color:rgba(17,17,15,.08); }
-    .prompt-intro h2 { max-width:6ch; }
-    .prompt-intro p { margin-top:16px; color:#413c35; font:400 18px/1.18 "Instrument Serif",serif; max-width:12ch; }
-    .prompt-stack { display:grid; gap:18px; padding:24px; }
-    .prompt-card { display:grid; grid-template-columns:220px minmax(0, 1fr); gap:22px; padding:26px; border:1.5px solid var(--line); background:rgba(255,249,241,.46); box-shadow:16px 16px 0 rgba(17,17,15,.08); transition:transform .6s cubic-bezier(.22,1,.36,1), opacity .45s ease, box-shadow .25s ease; }
-    .prompt-card:nth-child(2) { background:#f3e8d9; }
-    .prompt-card:nth-child(3) { background:#eadccc; }
-    .prompt-card:nth-child(odd) { transform:rotate(-.9deg); }
-    .prompt-card:nth-child(even) { transform:rotate(.75deg); }
-    .prompt-card:hover { box-shadow:22px 22px 0 rgba(17,17,15,.13); }
-    .prompt-side strong { display:block; font:600 10px/1.3 "IBM Plex Mono",ui-monospace,monospace; letter-spacing:.22em; text-transform:uppercase; color:var(--red); }
+    .lede {
+      position:relative;
+      z-index:2;
+      max-width:620px;
+      margin-top:26px;
+      font:400 clamp(24px, 2.4vw, 34px)/1.08 "Instrument Serif", serif;
+      color:#edf3ff;
+    }
+    .support {
+      position:relative;
+      z-index:2;
+      max-width:640px;
+      margin-top:18px;
+      font:500 13px/1.84 "IBM Plex Mono", ui-monospace, monospace;
+      color:var(--text-1);
+    }
+    .vault-svg {
+      position:absolute;
+      inset:auto auto 5% 3%;
+      width:min(62vw, 900px);
+      height:min(56vh, 460px);
+      pointer-events:none;
+      opacity:.96;
+    }
+    .vault-svg path, .vault-svg circle, .vault-svg line { fill:none; }
+    .vault-svg .halo { stroke:rgba(255,255,255,.06); stroke-width:1; }
+    .vault-svg .trace-back { stroke:rgba(128,216,255,.08); stroke-width:12; }
+    .vault-svg .trace-front { stroke:var(--cyan); stroke-width:3; stroke-dasharray:1200; stroke-dashoffset:1200; animation:trace 3.4s var(--ease) .2s forwards; }
+    .vault-svg .trace-alt { stroke:rgba(255,107,66,.8); stroke-width:2; stroke-dasharray:620; stroke-dashoffset:620; animation:trace 2.2s var(--ease) .7s forwards; }
+    .vault-svg .node { fill:var(--bg-0); stroke:var(--cyan); stroke-width:2; }
+    .metric-rack {
+      position:relative;
+      z-index:2;
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      gap:0;
+      margin-top:54px;
+      border-top:1px solid var(--line);
+      border-left:1px solid var(--line);
+    }
+    .metric-cell {
+      min-height:122px;
+      padding:18px 16px;
+      border-right:1px solid var(--line);
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+    }
+    .metric-cell strong {
+      display:block;
+      font:900 clamp(42px, 4vw, 64px)/.88 "Big Shoulders Display", sans-serif;
+      color:var(--text-0);
+    }
+    .metric-cell span {
+      display:inline-flex;
+      margin-top:10px;
+      padding:6px 10px;
+      border:1px solid rgba(255,255,255,.12);
+      font:600 10px/1 "IBM Plex Mono", ui-monospace, monospace;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:var(--text-2);
+    }
+    .command-grid {
+      position:relative;
+      z-index:2;
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      margin-top:18px;
+      border-left:1px solid var(--line);
+    }
+    .command-tile {
+      min-height:138px;
+      padding:22px 20px;
+      border-right:1px solid var(--line);
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+      transition:transform .24s ease, background .24s ease, box-shadow .24s ease;
+    }
+    .command-tile:hover {
+      transform:translate(-6px, -6px);
+      background:rgba(128,216,255,.06);
+      box-shadow:12px 12px 0 rgba(0,0,0,.28);
+    }
+    .command-tile strong {
+      display:block;
+      max-width:12ch;
+      font:800 28px/.9 "Big Shoulders Display", sans-serif;
+      color:var(--text-0);
+    }
+    .command-tile span {
+      display:block;
+      max-width:24ch;
+      margin-top:12px;
+      font:500 12px/1.76 "IBM Plex Mono", ui-monospace, monospace;
+      color:var(--text-1);
+    }
+    .hero-footer {
+      position:relative;
+      z-index:2;
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+    }
+    .hero-footer span {
+      padding:12px 14px;
+      border-right:1px solid var(--line);
+      border-top:1px solid var(--line);
+      font:600 10px/1.45 "IBM Plex Mono", ui-monospace, monospace;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:var(--text-2);
+      background:rgba(255,255,255,.02);
+    }
+    .hero-footer span:last-child { border-right:none; }
+    .command-rail {
+      position:relative;
+      display:grid;
+      grid-template-rows:auto auto 1fr auto;
+      background:linear-gradient(180deg, rgba(10,14,19,.98), rgba(12,17,24,.98));
+    }
+    .command-rail::before {
+      content:"PROTOCOL";
+      position:absolute;
+      right:16px;
+      top:24px;
+      font:600 clamp(54px, 6vw, 110px)/.9 "Big Shoulders Display", sans-serif;
+      color:rgba(255,255,255,.05);
+      letter-spacing:.04em;
+      pointer-events:none;
+    }
+    .rail-head, .rail-intro, .rail-stack, .rail-links { padding:28px 26px 0; }
+    .rail-head p, .rail-intro p { font:500 12px/1.75 "IBM Plex Mono", ui-monospace, monospace; color:var(--text-1); }
+    .rail-stack { display:grid; gap:14px; padding-top:24px; }
+    .rail-card {
+      padding:22px 20px 24px;
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      transition:transform .28s ease, border-color .28s ease, background .28s ease;
+    }
+    .rail-card:hover {
+      transform:translateX(8px);
+      border-color:rgba(128,216,255,.24);
+      background:rgba(128,216,255,.05);
+    }
+    .rail-card p {
+      margin-top:12px;
+      color:#d7e0ec;
+      font:400 18px/1.12 "Instrument Serif", serif;
+    }
+    .rail-card code, .lane-card code, .prompt-card code, .console pre, .discovery-link code {
+      display:inline-block;
+      margin-top:16px;
+      padding:10px 12px;
+      border:1px solid currentColor;
+      font:500 12px/1.55 "IBM Plex Mono", ui-monospace, monospace;
+      word-break:break-word;
+      background:rgba(255,255,255,.03);
+    }
+    .rail-links {
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:0;
+      padding:26px;
+      border-top:1px solid rgba(255,255,255,.08);
+    }
+    .rail-links a {
+      padding:16px 14px;
+      border:1px solid rgba(255,255,255,.08);
+      border-right:none;
+      transition:transform .22s ease, background .22s ease;
+    }
+    .rail-links a:last-child { border-right:1px solid rgba(255,255,255,.08); }
+    .rail-links a:hover { transform:translateY(-4px); background:rgba(255,255,255,.04); }
+    .rail-links strong { display:block; font:800 18px/.94 "Big Shoulders Display", sans-serif; }
+    .rail-links span { display:block; margin-top:8px; font:500 11px/1.7 "IBM Plex Mono", ui-monospace, monospace; color:var(--text-1); }
+    .section {
+      position:relative;
+      border-top:1px solid var(--line);
+      min-height:100svh;
+    }
+    .split {
+      display:grid;
+      grid-template-columns:320px minmax(0, 1fr);
+      min-height:100%;
+    }
+    .section-label {
+      position:sticky;
+      top:58px;
+      align-self:start;
+      min-height:calc(100svh - 58px);
+      padding:30px 24px;
+      border-right:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(8,12,17,.96), rgba(8,12,17,.82));
+    }
+    .section-label p {
+      margin-top:18px;
+      max-width:12ch;
+      color:#cbd5e1;
+      font:400 22px/1.06 "Instrument Serif", serif;
+    }
+    .section-stage { min-width:0; }
+    .lanes {
+      padding:30px;
+      display:grid;
+      gap:18px;
+      background:linear-gradient(180deg, rgba(7,11,16,.86), rgba(9,13,19,.72));
+    }
+    .lane-card {
+      position:relative;
+      display:grid;
+      grid-template-columns:minmax(0, 1.16fr) 180px 220px;
+      align-items:end;
+      gap:22px;
+      min-height:168px;
+      padding:28px 28px 26px;
+      border:1px solid var(--line);
+      overflow:hidden;
+      transition:transform .6s var(--ease), opacity .5s ease, border-color .25s ease;
+    }
+    .lane-card::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:linear-gradient(120deg, rgba(255,255,255,.02), transparent 22%, transparent 72%, rgba(128,216,255,.04));
+    }
+    .lane-card::after {
+      content:"";
+      position:absolute;
+      right:26px;
+      bottom:24px;
+      width:120px;
+      height:1px;
+      background:currentColor;
+      opacity:.26;
+    }
+    .lane-card.open {
+      transform:translate3d(54px, 0, 0) rotate(-1.2deg);
+      background:linear-gradient(180deg, rgba(14,21,31,.92), rgba(10,16,24,.96));
+      color:var(--text-0);
+    }
+    .lane-card.paid {
+      transform:translate3d(-42px, 0, 0) rotate(.95deg);
+      background:linear-gradient(180deg, rgba(27,14,12,.92), rgba(18,12,12,.96));
+      color:#fff7f4;
+    }
+    .lane-card.is-visible { transform:translate3d(0,0,0) rotate(0); }
+    .lane-card .tag { background:rgba(255,255,255,.03); }
+    .lane-card p {
+      margin-top:12px;
+      max-width:40rem;
+      color:var(--text-1);
+      font:400 20px/1.08 "Instrument Serif", serif;
+    }
+    .lane-card.paid p { color:#ffe0d7; }
+    .lane-meta {
+      font:600 10px/1.6 "IBM Plex Mono", ui-monospace, monospace;
+      letter-spacing:.2em;
+      text-transform:uppercase;
+      color:inherit;
+      opacity:.72;
+    }
+    .lane-price {
+      justify-self:end;
+      font:800 28px/.92 "Big Shoulders Display", sans-serif;
+      text-transform:uppercase;
+    }
+    .chamber {
+      background:
+        radial-gradient(circle at 22% 14%, rgba(128,216,255,.08), transparent 20%),
+        radial-gradient(circle at 78% 12%, rgba(255,107,66,.07), transparent 16%),
+        linear-gradient(180deg, rgba(8,12,17,.98), rgba(7,11,16,.98));
+    }
+    .chamber-grid {
+      padding:32px;
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) 360px;
+      gap:26px;
+    }
+    .target-stack {
+      display:grid;
+      gap:18px;
+    }
+    .target-card {
+      position:relative;
+      padding:28px 28px 30px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      box-shadow:0 24px 80px rgba(0,0,0,.26);
+      transition:transform .26s ease, border-color .26s ease, box-shadow .26s ease;
+    }
+    .target-card:nth-child(2) { margin-left:34px; }
+    .target-card:nth-child(3) { margin-left:68px; }
+    .target-card:hover {
+      transform:translate(-8px, -8px);
+      border-color:rgba(128,216,255,.24);
+      box-shadow:0 32px 90px rgba(0,0,0,.34);
+    }
+    .target-card p {
+      margin-top:14px;
+      max-width:38rem;
+      color:#dce6f2;
+      font:400 20px/1.1 "Instrument Serif", serif;
+    }
+    .note-row {
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:18px;
+      font:600 10px/1.4 "IBM Plex Mono", ui-monospace, monospace;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:var(--text-2);
+    }
+    .watch-rail {
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+    }
+    .watch-head {
+      padding:26px 22px;
+      border-bottom:1px solid var(--line);
+    }
+    .watch-head p {
+      margin-top:14px;
+      color:#d8e1ed;
+      font:400 20px/1.08 "Instrument Serif", serif;
+    }
+    .watch-row {
+      padding:20px 22px 22px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      transition:background .24s ease, transform .24s ease;
+    }
+    .watch-row:hover { background:rgba(128,216,255,.05); transform:translateX(8px); }
+    .watch-row:last-child { border-bottom:none; }
+    .watch-row p {
+      margin-top:12px;
+      color:var(--text-1);
+      font:400 18px/1.12 "Instrument Serif", serif;
+    }
+    .dispatch {
+      background:linear-gradient(180deg, rgba(9,13,19,.98), rgba(12,16,22,.98));
+    }
+    .dispatch-grid {
+      padding:30px;
+      display:grid;
+      gap:18px;
+    }
+    .prompt-card {
+      position:relative;
+      display:grid;
+      grid-template-columns:240px minmax(0, 1fr);
+      gap:24px;
+      padding:28px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      box-shadow:0 24px 80px rgba(0,0,0,.22);
+      transition:transform .55s var(--ease), opacity .45s ease, box-shadow .22s ease;
+    }
+    .prompt-card:nth-child(odd) { transform:translateX(42px); }
+    .prompt-card:nth-child(even) { transform:translateX(-30px); }
+    .prompt-card.is-visible { transform:translateX(0); }
+    .prompt-card:hover { box-shadow:0 34px 96px rgba(0,0,0,.3); }
+    .prompt-side strong {
+      display:block;
+      color:var(--cyan);
+      font:600 10px/1.25 "IBM Plex Mono", ui-monospace, monospace;
+      letter-spacing:.22em;
+      text-transform:uppercase;
+    }
     .prompt-side h3 { margin-top:12px; }
-    .prompt-card p { color:var(--muted); font:400 18px/1.16 "Instrument Serif",serif; }
-    .machine { display:grid; grid-template-columns:minmax(0, 1fr) 380px; background:linear-gradient(180deg, var(--void), #0a0c10); color:var(--chalk); }
-    .console-wrap { border-right:1.5px solid rgba(255,255,255,.12); }
-    .console-head { padding:30px 28px 0; }
-    .console-head p { margin-top:14px; max-width:34rem; color:#d3c7b7; font:400 18px/1.18 "Instrument Serif",serif; }
-    .console-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); margin-top:26px; }
-    .console { padding:26px 28px; border-top:1px solid rgba(255,255,255,.12); border-right:1px solid rgba(255,255,255,.12); min-height:100%; background:linear-gradient(180deg, rgba(255,255,255,.02), transparent); }
-    .console:last-child { border-right:none; }
-    .console p, .console .foot { margin-top:14px; color:#bfb39f; font:500 12px/1.75 "IBM Plex Mono",ui-monospace,monospace; }
-    .discovery { padding:30px 28px; background:linear-gradient(180deg, #12151a, #171c22); }
-    .discovery p { margin-top:14px; color:#d2c6b5; font:400 18px/1.18 "Instrument Serif",serif; }
-    .discovery a { display:block; margin-top:18px; padding:18px; border:1px solid rgba(255,255,255,.14); transition:transform .3s ease, background .3s ease, box-shadow .3s ease; }
-    .discovery a:hover { transform:translate(8px, -6px); background:rgba(255,255,255,.04); box-shadow:12px 12px 0 rgba(255,255,255,.05); }
-    .discovery a strong { display:block; font:700 22px/.94 "Syne",sans-serif; text-transform:uppercase; }
-    .discovery a span { display:block; margin-top:10px; color:#cbbfad; font:500 12px/1.72 "IBM Plex Mono",ui-monospace,monospace; }
-    .closing { display:grid; grid-template-columns:minmax(0, 1.08fr) minmax(340px, .92fr); border-top:1.5px solid var(--line); }
-    .closing-copy { position:relative; padding:34px clamp(24px, 4vw, 56px); background:var(--paper-soft); border-right:1.5px solid var(--line); }
-    .closing-copy::after { content:"ENDNOTE"; position:absolute; right:18px; bottom:16px; font:italic 400 clamp(66px, 7vw, 124px)/.84 "Instrument Serif",serif; color:rgba(17,17,15,.07); }
-    .closing-copy p { position:relative; z-index:1; margin-top:18px; max-width:34rem; color:#342f29; font:400 21px/1.12 "Instrument Serif",serif; }
-    .closing-call { padding:34px 28px; background:linear-gradient(180deg, var(--red), #b82f1b); color:var(--chalk); }
-    .closing-call p { margin-top:14px; color:#ffe2d6; font:500 12px/1.75 "IBM Plex Mono",ui-monospace,monospace; }
-    .closing-call .action { margin-top:22px; border:1px solid rgba(255,255,255,.26); background:rgba(255,255,255,.1); color:var(--chalk); min-height:auto; box-shadow:none; }
-    .closing-call .action:hover { box-shadow:10px 10px 0 rgba(17,17,15,.34); }
-    .closing-call .action strong { font-size:26px; }
-    .reveal { opacity:0; filter:blur(10px); }
+    .prompt-copy p {
+      color:#d6e0ec;
+      font:400 20px/1.1 "Instrument Serif", serif;
+    }
+    .kernel {
+      background:linear-gradient(180deg, rgba(5,7,10,.98), rgba(7,10,14,.98));
+    }
+    .kernel-grid {
+      padding:32px;
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) 380px;
+      gap:24px;
+    }
+    .console-stack {
+      display:grid;
+      gap:18px;
+    }
+    .console {
+      padding:28px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+    }
+    .console p, .console .foot {
+      margin-top:14px;
+      color:var(--text-1);
+      font:500 12px/1.75 "IBM Plex Mono", ui-monospace, monospace;
+    }
+    .discovery-stack {
+      display:grid;
+      gap:14px;
+    }
+    .discovery-link {
+      display:block;
+      padding:22px 20px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      transition:transform .24s ease, border-color .24s ease, background .24s ease;
+    }
+    .discovery-link:hover {
+      transform:translate(8px, -6px);
+      border-color:rgba(128,216,255,.24);
+      background:rgba(128,216,255,.05);
+    }
+    .discovery-link span {
+      display:block;
+      margin-top:10px;
+      color:var(--text-1);
+      font:500 12px/1.72 "IBM Plex Mono", ui-monospace, monospace;
+    }
+    .exit {
+      display:grid;
+      grid-template-columns:minmax(0, 1.06fr) minmax(340px, .94fr);
+      border-top:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(8,12,17,.98), rgba(6,10,14,.98));
+    }
+    .exit-copy {
+      position:relative;
+      padding:34px clamp(24px, 4vw, 64px);
+      border-right:1px solid var(--line);
+    }
+    .exit-copy::after {
+      content:"RESOLVE";
+      position:absolute;
+      right:20px;
+      bottom:16px;
+      font:italic 400 clamp(70px, 7vw, 140px)/.84 "Instrument Serif", serif;
+      color:rgba(255,255,255,.05);
+    }
+    .exit-copy p {
+      position:relative;
+      z-index:1;
+      max-width:34rem;
+      margin-top:18px;
+      color:#dce4ef;
+      font:400 22px/1.08 "Instrument Serif", serif;
+    }
+    .exit-call {
+      padding:34px 28px;
+      background:linear-gradient(180deg, rgba(255,107,66,.22), rgba(255,107,66,.12));
+    }
+    .exit-call p {
+      margin-top:14px;
+      color:#ffe4dd;
+      font:500 12px/1.8 "IBM Plex Mono", ui-monospace, monospace;
+    }
+    .reveal { opacity:0; filter:blur(8px); }
     .reveal.is-visible { opacity:1; filter:blur(0); }
-    .cover-top, .cover-copy > div, .tower, .console, .discovery a { animation:rise .8s ease both; }
-    .cover-copy > div:nth-child(2) { animation-delay:.08s; }
-    .cover-copy > div:nth-child(3) { animation-delay:.14s; }
-    .tower { animation-delay:.18s; }
-    @keyframes rise { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes draw { to { stroke-dashoffset:0; } }
-    @media (max-width:1320px) { .cover, .pressure, .machine, .closing { grid-template-columns:1fr; } .cover-copy, .pressure-main, .console-wrap, .closing-copy { border-right:none; border-bottom:1.5px solid var(--line); } .cover::before { background:linear-gradient(180deg, transparent 0 66%, rgba(13,16,20,.97) 66% 100%); } .cover-trace { width:min(72vw, 860px); } .tower::before { transform:none; top:auto; bottom:18px; right:18px; } .stats-strip { grid-template-columns:repeat(2, minmax(0, 1fr)); } .ticker { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
-    @media (max-width:1120px) { .scene-head, .prompts { grid-template-columns:1fr; } .scene-label, .prompt-intro { border-right:none; border-bottom:1.5px solid var(--line); } .route-band, .prompt-card { grid-template-columns:1fr; } .route-band .route-price { justify-self:start; } .pressure-main .feature:nth-child(2), .pressure-main .feature:nth-child(3) { margin-left:0; } .console-grid { grid-template-columns:1fr; } .console { border-right:none; } }
-    @media (max-width:900px) { .progress { display:none; } .wrap { width:min(100vw - 18px, 1660px); padding:10px 0 44px; } .ticker, .action-row, .issue-note, .tower-links, .stats-strip { grid-template-columns:1fr; } .ticker div, .metric, .action, .issue-note span, .tower-links a { border-right:none; } .tower-links a { border-bottom:1px solid rgba(255,255,255,.14); } .tower-links a:last-child { border-bottom:none; } }
-    @media (max-width:720px) { .cover-copy, .tower > *, .scene-label, .pressure-main, .pressure-rail .rail-head, .watch-item, .prompt-intro, .prompt-stack, .console-head, .console, .discovery, .closing-copy, .closing-call { padding-left:18px; padding-right:18px; } h1 { max-width:100%; font-size:clamp(60px, 18vw, 112px); } h2 { font-size:clamp(34px, 13vw, 58px); } .deck { font-size:clamp(22px, 8vw, 30px); } .cover-copy::before { top:158px; right:0; font-size:clamp(92px, 28vw, 160px); } .cover-copy::after { width:58vw; height:34vw; right:8%; top:13%; } .cover-trace { left:12px; right:12px; bottom:12px; width:auto; height:180px; } .action { min-height:132px; } .bands, .pressure-main, .prompt-stack { padding:14px; } .machine { grid-template-columns:1fr; } .console-wrap { border-right:none; border-bottom:1.5px solid rgba(255,255,255,.12); } }
+    @keyframes trace { to { stroke-dashoffset:0; } }
+    @media (max-width:1320px) {
+      .hero, .chamber-grid, .kernel-grid, .exit { grid-template-columns:1fr; }
+      .hero-copy, .exit-copy { border-right:none; border-bottom:1px solid var(--line); }
+      .hero { min-height:auto; }
+      .hero::before { background:linear-gradient(180deg, rgba(6,9,13,.8) 0 62%, rgba(11,16,22,.98) 62% 100%); }
+      .rail-links { grid-template-columns:1fr; }
+      .rail-links a { border-right:1px solid rgba(255,255,255,.08); border-bottom:none; }
+      .target-card:nth-child(2), .target-card:nth-child(3) { margin-left:0; }
+      .metric-rack { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width:1120px) {
+      .split { grid-template-columns:1fr; }
+      .section-label {
+        position:relative;
+        top:auto;
+        min-height:auto;
+        border-right:none;
+        border-bottom:1px solid var(--line);
+      }
+      .lane-card, .prompt-card { grid-template-columns:1fr; }
+      .lane-price { justify-self:start; }
+      .command-grid, .hero-footer { grid-template-columns:1fr; }
+      .hero-footer span { border-right:none; }
+      .progress { display:none; }
+    }
+    @media (max-width:820px) {
+      .shell { width:min(100vw - 16px, 1700px); padding:8px 0 44px; }
+      .topline, .metric-rack { grid-template-columns:1fr; }
+      .topline div, .metric-cell { border-right:none; }
+      .hero-copy, .rail-head, .rail-intro, .rail-stack, .section-label, .lanes, .chamber-grid, .dispatch-grid, .kernel-grid, .exit-copy, .exit-call { padding-left:18px; padding-right:18px; }
+      h1 { font-size:clamp(62px, 19vw, 114px); }
+      h2 { font-size:clamp(34px, 12vw, 58px); }
+      .lede { font-size:clamp(22px, 7vw, 30px); }
+      .hero-copy::after { width:54vw; height:54vw; right:4%; top:18%; }
+      .vault-svg { left:8px; right:8px; bottom:16px; width:auto; height:220px; }
+      .lane-card.open, .lane-card.paid, .prompt-card:nth-child(odd), .prompt-card:nth-child(even) { transform:none; }
+      .lane-card.is-visible, .prompt-card.is-visible { transform:none; }
+    }
   </style>
 </head>
 <body>
   <nav class="progress" aria-label="Page progress">
-    <a href="#cover" data-target="cover" class="active">Cover</a>
-    <a href="#routes" data-target="routes">Routes</a>
+    <a href="#vault" data-target="vault" class="active">Vault</a>
+    <a href="#lanes" data-target="lanes">Lanes</a>
     <a href="#pressure" data-target="pressure">Pressure</a>
-    <a href="#buyer" data-target="buyer">Buyer</a>
-    <a href="#machine" data-target="machine">Machine</a>
+    <a href="#dispatch" data-target="dispatch">Dispatch</a>
+    <a href="#kernel" data-target="kernel">Kernel</a>
   </nav>
-  <div class="wrap">
-    <div class="paper">
-      <div class="ticker">
-        <div><strong>Field report</strong><br>Issue 004 / operator surface</div>
-        <div><strong>Coverage</strong><br>bitcoin / stacks / x402 / AIBTC</div>
-        <div><strong>Live sync</strong><br>${escapeHtml(snapshot.generatedAt)}</div>
-        <div><strong>Read mode</strong><br>editorial front / technical spine</div>
+  <div class="shell">
+    <div class="deck">
+      <div class="topline">
+        <div><strong>Vault protocol</strong><span class="accent">Issue 005</span> / command center</div>
+        <div><strong>Coverage</strong>bitcoin / stacks / x402 / AIBTC</div>
+        <div><strong>Live sync</strong>${escapeHtml(snapshot.generatedAt)}</div>
+        <div><strong>Mode</strong>cinematic vault / protocol control</div>
       </div>
 
-      <section class="cover" id="cover" data-scene="cover">
-        <article class="cover-copy">
-          <svg class="cover-trace" viewBox="0 0 780 420" aria-hidden="true">
-            <path class="trace-back" d="M24 324C140 316 160 184 274 184C362 184 392 254 466 254C580 254 596 82 744 78" />
-            <path class="trace-front" d="M24 324C140 316 160 184 274 184C362 184 392 254 466 254C580 254 596 82 744 78" />
-            <circle class="trace-node" cx="274" cy="184" r="11" />
-            <circle class="trace-node" cx="466" cy="254" r="11" />
-            <circle class="trace-node" cx="744" cy="78" r="11" />
+      <section class="hero" id="vault" data-scene="vault">
+        <article class="hero-copy">
+          <svg class="vault-svg" viewBox="0 0 980 480" aria-hidden="true">
+            <circle class="halo" cx="292" cy="240" r="90" />
+            <circle class="halo" cx="292" cy="240" r="150" />
+            <circle class="halo" cx="292" cy="240" r="212" />
+            <path class="trace-back" d="M36 368C134 352 174 282 258 246C330 216 420 226 510 214C626 198 686 126 792 108C860 96 912 118 946 156" />
+            <path class="trace-front" d="M36 368C134 352 174 282 258 246C330 216 420 226 510 214C626 198 686 126 792 108C860 96 912 118 946 156" />
+            <path class="trace-alt" d="M258 246C322 314 392 352 458 352C560 352 642 268 742 268" />
+            <circle class="node" cx="258" cy="246" r="10" />
+            <circle class="node" cx="510" cy="214" r="10" />
+            <circle class="node" cx="792" cy="108" r="10" />
+            <line class="halo" x1="36" y1="418" x2="946" y2="418" />
           </svg>
-          <div class="cover-top">
+          <div class="hero-bar">
             <div>
-              <div class="eyebrow">AIBTC operator gazette</div>
-              <div class="subdeck">A brutal editorial surface for builders who would rather trace the system than believe the pitch.</div>
+              <div class="kicker">Satsmith protocol desk</div>
+              <div class="support">A cinematic vault for operators who need the system before they trust the story.</div>
             </div>
-            <div class="stamp">Demand engine</div>
+            <div class="tag">Protocol command center</div>
           </div>
           <div>
-            <h1>Don't buy<br>the story.<br>Trace the<br>system.</h1>
-            <div class="deck">Satsmith is a working operator desk for AIBTC builders who need counterparty diligence, wallet-auth triage, and technical leverage before they waste trust, time, or sats.</div>
-            <div class="subdeck">The page should feel like a cover spread, not a dashboard. Humans browse it like a field report. Agents parse it like a tool surface. Buyers start free, then pay only when the answer is worth it.</div>
+            <h1>Open the vault. Route the signal. Kill the guesswork.</h1>
+            <div class="lede">Satsmith is an operator-grade intelligence and debug surface for AIBTC builders who need trust checks, wallet-auth triage, and technical leverage before they waste time, trust, or sats.</div>
+            <div class="support">The opening act should feel like a command room, not a product hero. Humans scan it like a restricted control surface. Agents read it like a live protocol map.</div>
           </div>
           <div>
-            <div class="stats-strip">
-              <article class="metric"><strong>${summary.totalAgents.toLocaleString("en-US")}</strong><span class="metric-label">agents watched</span></article>
-              <article class="metric"><strong>${summary.activeAgents.toLocaleString("en-US")}</strong><span class="metric-label">active operators</span></article>
-              <article class="metric"><strong>${summary.totalMessages.toLocaleString("en-US")}</strong><span class="metric-label">paid messages</span></article>
-              <article class="metric"><strong>${summary.totalSatsTransacted.toLocaleString("en-US")}</strong><span class="metric-label">sats traced</span></article>
+            <div class="metric-rack">
+              ${vaultMetrics.map((metric) => `
+                <article class="metric-cell">
+                  <strong>${escapeHtml(metric.value)}</strong>
+                  <span>${escapeHtml(metric.label)}</span>
+                </article>
+              `).join("")}
             </div>
-            <div class="action-row">
-              <a class="action" href="${serviceBase}/api/preview"><strong>Open preview</strong><span>Read the market first without committing to a paid route.</span></a>
-              <a class="action" href="${serviceBase}/api/hire"><strong>Buyer kit</strong><span>Use the exact request shapes that convert into technical work.</span></a>
-              <a class="action" href="${serviceBase}/api/counterparty"><strong>Trust check</strong><span>Pressure-test a repo, builder, or project surface before you step in.</span></a>
-              <a class="action" href="${serviceBase}/api/auth-debug"><strong>Auth debug</strong><span>Triage signatures, heartbeat flow, inbox failures, and registration drift.</span></a>
+            <div class="command-grid">
+              <a class="command-tile" href="${serviceBase}/api/preview"><strong>Open preview</strong><span>Read the public intelligence layer before paying for a narrower answer.</span></a>
+              <a class="command-tile" href="${serviceBase}/api/hire"><strong>Open buyer kit</strong><span>Use the highest-converting request shapes instead of vague asks.</span></a>
+              <a class="command-tile" href="${serviceBase}/api/counterparty"><strong>Trust screen</strong><span>Pressure-test a repo, builder, or project before you step in.</span></a>
+              <a class="command-tile" href="${serviceBase}/api/auth-debug"><strong>Auth triage</strong><span>Debug heartbeat, inbox, signing, and registration flow from one free route.</span></a>
             </div>
           </div>
-          <div class="issue-note">
+          <div class="hero-footer">
             <span>AIBTC profile live</span>
-            <span>project board public</span>
+            <span>Project board linked</span>
             <span>x402 routes active</span>
-            <span>machine-readable discovery live</span>
+            <span>Machine-readable discovery ready</span>
           </div>
         </article>
 
-        <aside class="tower">
-          <div>
-            <div class="eyebrow">Inside this issue</div>
-            <h2>Three reasons this agent is worth opening.</h2>
+        <aside class="command-rail">
+          <div class="rail-head">
+            <div class="kicker">Control rail</div>
+            <h2>Three protocol desks. Zero filler.</h2>
           </div>
-          <div class="subdeck">This right rail is the technical tower. It compresses the first three buyer questions into routes that can be used immediately.</div>
-          <div class="tower-stack">
-            <article class="tower-card reveal">
-              <strong>Trust desk</strong>
-              <h3>Check the counterparty before you trust the narrative.</h3>
-              <p>Run due diligence on a repo, agent, or project surface before you spend attention on it.</p>
-              <code>/api/counterparty</code>
-            </article>
-            <article class="tower-card reveal">
-              <strong>Failure desk</strong>
-              <h3>Debug auth flow before it becomes a help thread.</h3>
-              <p>Trace signatures, check-ins, inbox flow, and registration mismatches from one route.</p>
-              <code>/api/auth-debug</code>
-            </article>
-            <article class="tower-card reveal">
-              <strong>Escalation desk</strong>
-              <h3>Escalate only when ranked output earns the right to charge.</h3>
-              <p>Move into fit and service mapping through x402 when the free answer is no longer enough.</p>
-              <code>/api/project-fit</code>
-            </article>
+          <div class="rail-intro">
+            <p>This side is the live command rail. It compresses the first buyer questions into desks that can be opened immediately, without scrolling through ordinary marketing blocks.</p>
           </div>
-          <div class="tower-links">
-            <a href="${serviceBase}/llms.txt"><strong>llms.txt</strong><span>Readable map for agents and autonomous clients.</span></a>
-            <a href="${serviceBase}/openapi.json"><strong>OpenAPI</strong><span>Structured schema for wrappers, plugins, and tools.</span></a>
+          <div class="rail-stack">
+            ${railRoutes.map((product) => `
+              <article class="rail-card reveal">
+                <div class="tag">${escapeHtml(product.status === "free" ? "Open desk" : "Paid desk")}</div>
+                <h3>${escapeHtml(product.name)}</h3>
+                <p>${escapeHtml(product.output)}</p>
+                <code>${escapeHtml(product.endpoint.replace(serviceBase, ""))}</code>
+              </article>
+            `).join("")}
           </div>
-          <div class="tower-foot">
-            <strong>Editorial stance</strong>
-            <p>Free first. Hard proof next. Paid only when leverage is obvious.</p>
+          <div class="rail-links">
+            ${discoveryLinks.map((item) => `
+              <a href="${escapeHtml(item.href)}">
+                <strong>${escapeHtml(item.title)}</strong>
+                <span>${escapeHtml(item.detail)}</span>
+              </a>
+            `).join("")}
           </div>
         </aside>
       </section>
 
-      <section class="scene" id="routes" data-scene="routes">
-        <div class="scene-head">
-          <div class="scene-label">
-            <div class="list-tag">Route ladder</div>
-            <h2>Products with a point of view.</h2>
-            <p>Free routes kill the first objection. Paid routes answer the expensive question. The ladder is visual, obvious, and impossible to mistake for a fintech pricing table.</p>
+      <section class="section" id="lanes" data-scene="lanes">
+        <div class="split">
+          <div class="section-label">
+            <div class="kicker">Access lanes</div>
+            <h2>Move through open lanes first. Pay only when the route earns it.</h2>
+            <p>This act is the access grid. No pricing table, no feature-grid residue. Each lane is a corridor with a role, a route, and a cost state.</p>
           </div>
-          <div class="scene-body">
-            <div class="bands">
-              ${routeBands.map((product) => `
-                <article class="route-band ${product.tone} reveal">
-                  <div>
-                    <div class="route-tag">${escapeHtml(product.tag)}</div>
-                    <h3>${escapeHtml(product.name)}</h3>
-                    <p>${escapeHtml(product.output)}</p>
-                    <code>${escapeHtml(product.endpoint.replace(serviceBase, ""))}</code>
+          <div class="section-stage lanes">
+            ${routeBands.map((product) => `
+              <article class="lane-card ${product.tone} reveal">
+                <div>
+                  <div class="tag">${escapeHtml(product.tag)}</div>
+                  <h3>${escapeHtml(product.name)}</h3>
+                  <p>${escapeHtml(product.output)}</p>
+                  <code>${escapeHtml(product.endpoint.replace(serviceBase, ""))}</code>
+                </div>
+                <div class="lane-meta">${escapeHtml(product.tone === "open" ? "Read or use immediately" : "x402 payment gate")}</div>
+                <div class="lane-price">${escapeHtml(product.price)}</div>
+              </article>
+            `).join("")}
+          </div>
+        </div>
+      </section>
+      <section class="section chamber" id="pressure" data-scene="pressure">
+        <div class="split">
+          <div class="section-label">
+            <div class="kicker">Pressure chamber</div>
+            <h2>Where the market is pressurizing into real work.</h2>
+            <p>This chamber is about pressure and urgency, not catalogs. Left side ranks the likely openings. Right side tracks the operators who are visibly moving.</p>
+            <div class="note-row">
+              ${chamberNotes.map((note) => `<span>${escapeHtml(note.label)} / ${escapeHtml(note.value)}</span>`).join("")}
+            </div>
+          </div>
+          <div class="section-stage chamber-grid">
+            <div class="target-stack">
+              ${top.map((project) => `
+                <article class="target-card reveal">
+                  <div class="tag">Pressure target</div>
+                  <h3>${escapeHtml(project.title)}</h3>
+                  <p>${escapeHtml(project.reason)} ${escapeHtml(project.firstMove)}</p>
+                  <div class="note-row">
+                    <span>${escapeHtml(project.status)}</span>
+                    <span>score ${project.score}</span>
+                    <span>${escapeHtml(project.angle)}</span>
                   </div>
-                  <div class="route-meta">${escapeHtml(product.tone === "paper" ? "Open route" : "Settles via x402")}</div>
-                  <div class="route-price">${escapeHtml(product.price)}</div>
                 </article>
               `).join("")}
             </div>
+            <aside class="watch-rail">
+              <div class="watch-head">
+                <div class="kicker">Builder watch</div>
+                <h3>Operators currently throwing signal.</h3>
+                <p>The watch rail is the market pulse: fewer modules, harder contrast, tighter judgment.</p>
+              </div>
+              ${watch.map((entry) => `
+                <article class="watch-row reveal">
+                  <h3>${escapeHtml(entry.displayName)}</h3>
+                  <p>${escapeHtml(entry.description)}</p>
+                  <div class="note-row"><span>leaderboard ${entry.score}</span></div>
+                </article>
+              `).join("")}
+            </aside>
           </div>
         </div>
       </section>
 
-      <section class="scene" id="pressure" data-scene="pressure">
-        <div class="scene-head">
-          <div class="scene-label">
-            <div class="list-tag">Pressure map</div>
-            <h2>Where work is likely to break open.</h2>
-            <p>This scene is about pressure, not catalogs. Left side shows ranked project angles. Right side is a dark watch rail for builders who are actually moving.</p>
+      <section class="section dispatch" id="dispatch" data-scene="dispatch">
+        <div class="split">
+          <div class="section-label">
+            <div class="kicker">Dispatch console</div>
+            <h2>Give the command in the shape real work takes.</h2>
+            <p>The buyer act should not sound like marketing copy. It should sound like a command queue, a brief, or an escalation path that already resembles the paid answer.</p>
           </div>
-          <div class="scene-body">
-            <div class="pressure">
-              <div class="pressure-main">
-                ${top.map((project) => `
-                  <article class="feature reveal">
-                    <div class="route-tag">Project target</div>
-                    <h3>${escapeHtml(project.title)}</h3>
-                    <p>${escapeHtml(project.reason)} ${escapeHtml(project.firstMove)}</p>
-                    <div class="meta"><span>${escapeHtml(project.status)}</span><span>score ${project.score}</span><span>${escapeHtml(project.angle)}</span></div>
-                  </article>
-                `).join("")}
-              </div>
-              <aside class="pressure-rail">
-                <div class="rail-head">
-                  <div class="eyebrow">Builder watch</div>
-                  <h3>Who is visibly moving.</h3>
-                  <p>The right rail is intentionally darker and tighter. It should feel like a field notebook tracking the builders worth watching.</p>
+          <div class="section-stage dispatch-grid">
+            ${buyerPrompts.map((item) => `
+              <article class="prompt-card reveal">
+                <div class="prompt-side">
+                  <strong>Dispatch prompt</strong>
+                  <h3>${escapeHtml(item.title)}</h3>
                 </div>
-                ${watch.map((entry) => `
-                  <article class="watch-item reveal">
-                    <h3>${escapeHtml(entry.displayName)}</h3>
-                    <p>${escapeHtml(entry.description)}</p>
-                    <div class="meta"><span>leaderboard ${entry.score}</span></div>
-                  </article>
-                `).join("")}
-              </aside>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="scene" id="buyer" data-scene="buyer">
-        <div class="scene-head">
-          <div class="scene-label">
-            <div class="list-tag">Buyer desk</div>
-            <h2>Tell the agent what hurts.</h2>
-            <p>Most pages stop at vague offers. This one should hand the buyer the exact shape of the request so the conversation starts closer to real delivery.</p>
-          </div>
-          <div class="scene-body">
-            <div class="prompts">
-              <div class="prompt-intro">
-                <div class="eyebrow">Prompt stack</div>
-                <h2>Prompts that sound like actual work.</h2>
-                <p>Each prompt is written to convert quickly: one clear problem, one obvious reason to care, one format that already resembles the paid answer.</p>
-              </div>
-              <div class="prompt-stack">
-                ${buyerPrompts.map((item) => `
-                  <article class="prompt-card reveal">
-                    <div class="prompt-side">
-                      <strong>Best-fit request</strong>
-                      <h3>${escapeHtml(item.title)}</h3>
-                    </div>
-                    <div>
-                      <p>${escapeHtml(item.useWhen)}</p>
-                      <code>${escapeHtml(item.prompt)}</code>
-                    </div>
-                  </article>
-                `).join("")}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="scene" id="machine" data-scene="machine">
-        <div class="scene-head">
-          <div class="scene-label">
-            <div class="list-tag">Machine layer</div>
-            <h2>Readable by agents, not just people.</h2>
-            <p>The final act turns into a black technical slab. This is where the service stops behaving like a cover spread and starts behaving like infrastructure.</p>
-          </div>
-          <div class="scene-body">
-            <div class="machine">
-              <div class="console-wrap">
-                <div class="console-head">
-                  <div class="eyebrow">Fast start</div>
-                  <h2>Read first. Escalate second.</h2>
-                  <p>Free routes should be obvious in seconds. Paid escalation should feel deliberate, not buried. The console below makes that hierarchy impossible to miss.</p>
+                <div class="prompt-copy">
+                  <p>${escapeHtml(item.useWhen)}</p>
+                  <code>${escapeHtml(item.prompt)}</code>
                 </div>
-                <div class="console-grid">
-                  <article class="console">
-                    <div class="route-tag">Start free</div>
-                    <h3>Use the public surface first.</h3>
-                    <pre>GET ${serviceBase}/api/preview
+              </article>
+            `).join("")}
+          </div>
+        </div>
+      </section>
 
+      <section class="section kernel" id="kernel" data-scene="kernel">
+        <div class="split">
+          <div class="section-label">
+            <div class="kicker">Kernel</div>
+            <h2>Readable by humans. Actionable by agents.</h2>
+            <p>The closing machine act turns the vault into a protocol surface. Free routes stay obvious. Paid escalation stays deliberate. Discovery stays explicit.</p>
+          </div>
+          <div class="section-stage kernel-grid">
+            <div class="console-stack">
+              <article class="console reveal">
+                <div class="tag">Start open</div>
+                <h3>Use the free routes before you buy depth.</h3>
+                <pre>GET ${serviceBase}/api/preview
 GET ${serviceBase}/api/hire
 
 POST ${serviceBase}/api/counterparty
@@ -1738,14 +2268,14 @@ POST ${serviceBase}/api/auth-debug
 {
   "flow": "heartbeat",
   "address": "SP...",
-  "message": "AIBTC Check-In | 2026-04-09T13:30:00Z",
+  "message": "AIBTC Check-In | 2026-04-10T13:30:00Z",
   "signature": "<signature>"
 }</pre>
-                  </article>
-                  <article class="console">
-                    <div class="route-tag">Escalate</div>
-                    <h3>Pay only when ranked output earns it.</h3>
-                    <pre>POST ${serviceBase}/api/project-fit
+              </article>
+              <article class="console reveal">
+                <div class="tag">Escalate with intent</div>
+                <h3>Pay only when ranked leverage matters.</h3>
+                <pre>POST ${serviceBase}/api/project-fit
 {
   "focus": "x402 wallet debug",
   "limit": 3
@@ -1758,40 +2288,33 @@ POST ${serviceBase}/api/service-map
 
 GET ${serviceBase}/llms.txt
 GET ${serviceBase}/openapi.json</pre>
-                    <div class="foot">Generated from live AIBTC activity, leaderboard, project-board, and bounty surfaces at ${escapeHtml(snapshot.generatedAt)}.</div>
-                  </article>
-                </div>
-              </div>
-              <aside class="discovery">
-                <div class="eyebrow">Discovery surfaces</div>
-                <h3>Machine-readable entry points.</h3>
-                <p>These links are part of the product, not footer scraps. Another runtime should be able to discover the service without scraping the page by hand.</p>
-                ${discoveryLinks.map((item) => `
-                  <a href="${escapeHtml(item.href)}">
-                    <strong>${escapeHtml(item.title)}</strong>
-                    <span>${escapeHtml(item.detail)}</span>
-                    <code>${escapeHtml(item.href.replace(serviceBase, ""))}</code>
-                  </a>
-                `).join("")}
-              </aside>
+                <div class="foot">Generated from live AIBTC activity, leaderboard, project-board, and bounty surfaces at ${escapeHtml(snapshot.generatedAt)}.</div>
+              </article>
             </div>
+            <aside class="discovery-stack">
+              ${discoveryLinks.map((item) => `
+                <a class="discovery-link reveal" href="${escapeHtml(item.href)}">
+                  <strong>${escapeHtml(item.title)}</strong>
+                  <span>${escapeHtml(item.detail)}</span>
+                  <code>${escapeHtml(item.href.replace(serviceBase, ""))}</code>
+                </a>
+              `).join("")}
+            </aside>
           </div>
         </div>
       </section>
 
-      <section class="closing">
-        <div class="closing-copy">
-          <div class="list-tag">Closing note</div>
-          <h2>Cover spread in front. Operator desk underneath.</h2>
-          <p>The page should feel more like a field report than a startup site. The visual language says editorial. The route structure says tooling. The conversion logic says start with proof, then pay for leverage. That tension is the actual brand.</p>
+      <section class="exit">
+        <div class="exit-copy">
+          <div class="kicker">Exit state</div>
+          <h2>Start in the vault. Leave with a route.</h2>
+          <p>The point of this page is not to look like a startup site with better typography. It is to feel like a restricted command surface: one opening thesis, one lane system, one pressure chamber, one dispatch act, one kernel. Every scene should compress indecision.</p>
         </div>
-        <div class="closing-call">
-          <div>
-            <div class="list-tag">Best next click</div>
-            <h3>Kill the biggest uncertainty first.</h3>
-            <p>If the question is trust, open counterparty. If the question is signatures or wallet flow, open auth-debug. If the question is fit or monetization, escalate into x402 and stop guessing.</p>
-          </div>
-          <a class="action" href="${serviceBase}/api/hire"><strong>Open buyer kit</strong><span>Use the exact prompt shapes that turn into real technical work.</span></a>
+        <div class="exit-call">
+          <div class="tag">Best next move</div>
+          <h3>Kill the biggest uncertainty first.</h3>
+          <p>If the problem is trust, open counterparty. If the problem is heartbeat, signatures, inbox, or wallet flow, open auth-debug. If the problem is fit, monetization, or targeting, escalate into the paid lanes.</p>
+          <a class="command-tile" href="${serviceBase}/api/hire"><strong>Open buyer kit</strong><span>Use the command shapes that already sound like technical work.</span></a>
         </div>
       </section>
     </div>
@@ -1801,20 +2324,19 @@ GET ${serviceBase}/openapi.json</pre>
       const scenes = Array.from(document.querySelectorAll("[data-scene]"));
       const progressLinks = Array.from(document.querySelectorAll(".progress a"));
       const revealNodes = Array.from(document.querySelectorAll(".reveal"));
-      const cover = document.querySelector(".cover-copy");
+      const hero = document.querySelector(".hero-copy");
 
-      const markScene = (name) => {
-        document.body.dataset.scene = name;
+      const setScene = (name) => {
         progressLinks.forEach((link) => link.classList.toggle("active", link.dataset.target === name));
       };
 
       const sceneObserver = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            markScene(entry.target.dataset.scene || "");
+            setScene(entry.target.dataset.scene || "");
           }
         });
-      }, { threshold: 0.55 });
+      }, { threshold: 0.48 });
 
       scenes.forEach((scene) => sceneObserver.observe(scene));
 
@@ -1824,23 +2346,23 @@ GET ${serviceBase}/openapi.json</pre>
             entry.target.classList.add("is-visible");
           }
         });
-      }, { threshold: 0.18 });
+      }, { threshold: 0.16 });
 
       revealNodes.forEach((node, index) => {
-        node.style.transitionDelay = String(Math.min(index * 40, 220)) + "ms";
+        node.style.transitionDelay = String(Math.min(index * 36, 220)) + "ms";
         revealObserver.observe(node);
       });
 
-      if (cover) {
+      if (hero) {
         window.addEventListener("pointermove", (event) => {
-          const rect = cover.getBoundingClientRect();
+          const rect = hero.getBoundingClientRect();
           const dx = ((event.clientX - rect.left) / rect.width) - 0.5;
           const dy = ((event.clientY - rect.top) / rect.height) - 0.5;
-          cover.style.setProperty("transform", "translate3d(" + (dx * -12) + "px, " + (dy * -8) + "px, 0)");
+          hero.style.transform = "translate3d(" + (dx * -12) + "px, " + (dy * -8) + "px, 0)";
         }, { passive: true });
 
         window.addEventListener("pointerleave", () => {
-          cover.style.removeProperty("transform");
+          hero.style.transform = "";
         }, { passive: true });
       }
     })();
@@ -1848,6 +2370,7 @@ GET ${serviceBase}/openapi.json</pre>
 </body>
 </html>`;
 }
+
 async function loadMarketSnapshot(): Promise<MarketSnapshot> {
   const [activityPayload, leaderboardPayload, projectsPayload, bountyPayload] = await Promise.all([
     fetchJson<{ stats?: { totalAgents?: number; activeAgents?: number; totalMessages?: number; totalSatsTransacted?: number } }>(ACTIVITY_URL),
@@ -2169,4 +2692,5 @@ app.post(
 );
 
 export default app;
+
 
