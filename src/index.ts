@@ -1571,8 +1571,8 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     .headline .shift {
       margin-left:clamp(26px, 5vw, 86px);
     }
-    h2 { font:800 clamp(38px, 5vw, 82px)/.9 "Big Shoulders Display", sans-serif; }
-    h3 { font:800 clamp(26px, 2.3vw, 38px)/.92 "Big Shoulders Display", sans-serif; }
+    h2 { font:800 clamp(38px, 5vw, 82px)/.94 "Big Shoulders Display", sans-serif; }
+    h3 { font:800 clamp(26px, 2.3vw, 38px)/.98 "Big Shoulders Display", sans-serif; }
     p { margin:0; }
     .lede {
       position:relative;
@@ -1721,6 +1721,48 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       margin-top:12px;
       color:#d7e0ec;
       font:400 18px/1.12 "Instrument Serif", serif;
+    }
+    .rail-card .tag,
+    .lane-card .tag,
+    .target-card .tag,
+    .console .tag,
+    .exit-call .tag {
+      margin-bottom:14px;
+    }
+    .rail-card h3,
+    .lane-card h3,
+    .target-card h3,
+    .watch-head h3,
+    .watch-row h3,
+    .prompt-side h3,
+    .console h3,
+    .discovery-link strong,
+    .command-tile strong {
+      line-height:.98;
+      letter-spacing:-.025em;
+    }
+    .section-label h2,
+    .rail-head h2,
+    .exit-copy h2 {
+      max-width:10ch;
+      line-height:.94;
+    }
+    .console h3 {
+      max-width:15ch;
+      margin-bottom:12px;
+    }
+    .watch-head h3,
+    .watch-row h3,
+    .prompt-side h3 {
+      max-width:13ch;
+    }
+    .lane-card h3,
+    .rail-card h3,
+    .target-card h3 {
+      max-width:14ch;
+    }
+    .discovery-link strong {
+      max-width:12ch;
     }
     .rail-card code, .lane-card code, .prompt-card code, .console pre, .discovery-link code {
       display:inline-block;
