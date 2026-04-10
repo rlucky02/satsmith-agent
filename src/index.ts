@@ -1495,7 +1495,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     .hero {
       position:relative;
       display:grid;
-      grid-template-columns:minmax(0, 1.16fr) minmax(360px, .84fr);
+      grid-template-columns:minmax(0, 1.2fr) minmax(390px, .8fr);
       min-height:100svh;
       background:
         radial-gradient(circle at 28% 34%, rgba(128,216,255,.10), transparent 30%),
@@ -1507,6 +1507,8 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       border-right:1px solid var(--line);
       display:grid;
       grid-template-rows:auto 1fr auto auto;
+      align-content:start;
+      row-gap:22px;
     }
     .hero-copy::before {
       content:"VAULT";
@@ -1554,9 +1556,20 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     h1 {
       position:relative;
       z-index:2;
-      max-width:8.1ch;
-      margin-top:34px;
-      font:900 clamp(86px, 12vw, 188px)/.78 "Big Shoulders Display", sans-serif;
+      max-width:8.4ch;
+      margin-top:20px;
+      font:900 clamp(64px, 9vw, 144px)/.8 "Big Shoulders Display", sans-serif;
+    }
+    .headline {
+      display:grid;
+      gap:2px;
+    }
+    .headline span {
+      display:block;
+      width:max-content;
+    }
+    .headline .shift {
+      margin-left:clamp(26px, 5vw, 86px);
     }
     h2 { font:800 clamp(38px, 5vw, 82px)/.9 "Big Shoulders Display", sans-serif; }
     h3 { font:800 clamp(26px, 2.3vw, 38px)/.92 "Big Shoulders Display", sans-serif; }
@@ -1565,7 +1578,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       position:relative;
       z-index:2;
       max-width:620px;
-      margin-top:26px;
+      margin-top:18px;
       font:400 clamp(24px, 2.4vw, 34px)/1.08 "Instrument Serif", serif;
       color:#edf3ff;
     }
@@ -1573,7 +1586,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       position:relative;
       z-index:2;
       max-width:640px;
-      margin-top:18px;
+      margin-top:12px;
       font:500 13px/1.84 "IBM Plex Mono", ui-monospace, monospace;
       color:var(--text-1);
     }
@@ -1597,7 +1610,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       display:grid;
       grid-template-columns:repeat(4, minmax(0, 1fr));
       gap:0;
-      margin-top:54px;
+      margin-top:32px;
       border-top:1px solid var(--line);
       border-left:1px solid var(--line);
     }
@@ -1628,7 +1641,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       z-index:2;
       display:grid;
       grid-template-columns:repeat(2, minmax(0, 1fr));
-      margin-top:18px;
+      margin-top:14px;
       border-left:1px solid var(--line);
     }
     .command-tile {
@@ -1690,11 +1703,11 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       letter-spacing:.04em;
       pointer-events:none;
     }
-    .rail-head, .rail-intro, .rail-stack, .rail-links { padding:28px 26px 0; }
+    .rail-head, .rail-intro, .rail-stack, .rail-links { padding:34px 30px 0; }
     .rail-head p, .rail-intro p { font:500 12px/1.75 "IBM Plex Mono", ui-monospace, monospace; color:var(--text-1); }
-    .rail-stack { display:grid; gap:14px; padding-top:24px; }
+    .rail-stack { display:grid; gap:18px; padding-top:28px; }
     .rail-card {
-      padding:22px 20px 24px;
+      padding:24px 22px 26px;
       border:1px solid rgba(255,255,255,.08);
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
       transition:transform .28s ease, border-color .28s ease, background .28s ease;
@@ -1722,7 +1735,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       display:grid;
       grid-template-columns:repeat(3, minmax(0, 1fr));
       gap:0;
-      padding:26px;
+      padding:30px;
       border-top:1px solid rgba(255,255,255,.08);
     }
     .rail-links a {
@@ -1738,31 +1751,31 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     .section {
       position:relative;
       border-top:1px solid var(--line);
-      min-height:100svh;
+      min-height:auto;
     }
     .split {
       display:grid;
-      grid-template-columns:320px minmax(0, 1fr);
+      grid-template-columns:380px minmax(0, 1fr);
       min-height:100%;
     }
     .section-label {
       position:sticky;
       top:58px;
       align-self:start;
-      min-height:calc(100svh - 58px);
-      padding:30px 24px;
+      min-height:auto;
+      padding:42px 30px 34px;
       border-right:1px solid var(--line);
       background:linear-gradient(180deg, rgba(8,12,17,.96), rgba(8,12,17,.82));
     }
     .section-label p {
-      margin-top:18px;
-      max-width:12ch;
+      margin-top:16px;
+      max-width:16ch;
       color:#cbd5e1;
-      font:400 22px/1.06 "Instrument Serif", serif;
+      font:400 22px/1.1 "Instrument Serif", serif;
     }
     .section-stage { min-width:0; }
     .lanes {
-      padding:30px;
+      padding:42px 36px;
       display:grid;
       gap:18px;
       background:linear-gradient(180deg, rgba(7,11,16,.86), rgba(9,13,19,.72));
@@ -1774,7 +1787,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       align-items:end;
       gap:22px;
       min-height:168px;
-      padding:28px 28px 26px;
+      padding:30px 30px 28px;
       border:1px solid var(--line);
       overflow:hidden;
       transition:transform .6s var(--ease), opacity .5s ease, border-color .25s ease;
@@ -1834,7 +1847,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
         linear-gradient(180deg, rgba(8,12,17,.98), rgba(7,11,16,.98));
     }
     .chamber-grid {
-      padding:32px;
+      padding:42px 36px;
       display:grid;
       grid-template-columns:minmax(0, 1fr) 360px;
       gap:26px;
@@ -1845,7 +1858,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     }
     .target-card {
       position:relative;
-      padding:28px 28px 30px;
+      padding:30px 30px 32px;
       border:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
       box-shadow:0 24px 80px rgba(0,0,0,.26);
@@ -1879,7 +1892,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
     }
     .watch-head {
-      padding:26px 22px;
+      padding:30px 24px;
       border-bottom:1px solid var(--line);
     }
     .watch-head p {
@@ -1888,7 +1901,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       font:400 20px/1.08 "Instrument Serif", serif;
     }
     .watch-row {
-      padding:20px 22px 22px;
+      padding:22px 24px 24px;
       border-bottom:1px solid rgba(255,255,255,.08);
       transition:background .24s ease, transform .24s ease;
     }
@@ -1903,7 +1916,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       background:linear-gradient(180deg, rgba(9,13,19,.98), rgba(12,16,22,.98));
     }
     .dispatch-grid {
-      padding:30px;
+      padding:42px 36px;
       display:grid;
       gap:18px;
     }
@@ -1912,7 +1925,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       display:grid;
       grid-template-columns:240px minmax(0, 1fr);
       gap:24px;
-      padding:28px;
+      padding:30px 30px 32px;
       border:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
       box-shadow:0 24px 80px rgba(0,0,0,.22);
@@ -1938,7 +1951,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       background:linear-gradient(180deg, rgba(5,7,10,.98), rgba(7,10,14,.98));
     }
     .kernel-grid {
-      padding:32px;
+      padding:42px 36px;
       display:grid;
       grid-template-columns:minmax(0, 1fr) 380px;
       gap:24px;
@@ -1948,7 +1961,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       gap:18px;
     }
     .console {
-      padding:28px;
+      padding:30px 30px 32px;
       border:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
     }
@@ -1963,7 +1976,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
     }
     .discovery-link {
       display:block;
-      padding:22px 20px;
+      padding:24px 22px;
       border:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
       transition:transform .24s ease, border-color .24s ease, background .24s ease;
@@ -2048,9 +2061,10 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
       .topline, .metric-rack { grid-template-columns:1fr; }
       .topline div, .metric-cell { border-right:none; }
       .hero-copy, .rail-head, .rail-intro, .rail-stack, .section-label, .lanes, .chamber-grid, .dispatch-grid, .kernel-grid, .exit-copy, .exit-call { padding-left:18px; padding-right:18px; }
-      h1 { font-size:clamp(62px, 19vw, 114px); }
+      h1 { font-size:clamp(62px, 19vw, 114px); max-width:100%; }
       h2 { font-size:clamp(34px, 12vw, 58px); }
       .lede { font-size:clamp(22px, 7vw, 30px); }
+      .headline .shift { margin-left:0; }
       .hero-copy::after { width:54vw; height:54vw; right:4%; top:18%; }
       .vault-svg { left:8px; right:8px; bottom:16px; width:auto; height:220px; }
       .lane-card.open, .lane-card.paid, .prompt-card:nth-child(odd), .prompt-card:nth-child(even) { transform:none; }
@@ -2097,7 +2111,7 @@ function renderLandingPage(snapshot: MarketSnapshot, serviceBase: string) {
             <div class="tag">Protocol command center</div>
           </div>
           <div>
-            <h1>Open the vault. Route the signal. Kill the guesswork.</h1>
+            <h1 class="headline"><span>Open the vault.</span><span class="shift">Route the</span><span>signal.</span><span class="shift">Kill the</span><span>guesswork.</span></h1>
             <div class="lede">Satsmith is an operator-grade intelligence and debug surface for AIBTC builders who need trust checks, wallet-auth triage, and technical leverage before they waste time, trust, or sats.</div>
             <div class="support">The opening act should feel like a command room, not a product hero. Humans scan it like a restricted control surface. Agents read it like a live protocol map.</div>
           </div>
